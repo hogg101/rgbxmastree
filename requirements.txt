@@ -1,0 +1,6 @@
+Flask>=2.3,<4
+waitress>=2.1,<4
+gpiozero>=1.6.2
+colorzero>=2.0
+
+

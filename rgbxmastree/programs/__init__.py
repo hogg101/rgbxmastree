@@ -1,0 +1,37 @@
+from __future__ import annotations
+
+from rgbxmastree.programs.base import ProgramSpec
+from rgbxmastree.programs.hue_cycle import hue_cycle
+from rgbxmastree.programs.one_by_one import one_by_one
+from rgbxmastree.programs.random_sparkles import random_sparkles
+from rgbxmastree.programs.rgb_cycle import rgb_cycle
+
+
+PROGRAMS: dict[str, ProgramSpec] = {
+    "rgb_cycle": ProgramSpec(
+        id="rgb_cycle",
+        name="RGB Cycle",
+        runner=rgb_cycle,
+        default_speed=1.0,
+    ),
+    "one_by_one": ProgramSpec(
+        id="one_by_one",
+        name="One by One",
+        runner=one_by_one,
+        default_speed=1.0,
+    ),
+    "hue_cycle": ProgramSpec(
+        id="hue_cycle",
+        name="Hue Cycle",
+        runner=hue_cycle,
+        default_speed=1.0,
+    ),
+    "random_sparkles": ProgramSpec(
+        id="random_sparkles",
+        name="Random Sparkles",
+        runner=random_sparkles,
+        default_speed=1.0,
+    ),
+}
+
+

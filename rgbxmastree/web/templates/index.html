@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Xmas Tree</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="header">
+        <div>
+          <div class="title">Xmas Tree</div>
+          <div class="sub" id="statusLine">Loading…</div>
+        </div>
+        <button class="btn btn-ghost" id="refreshBtn" type="button">Refresh</button>
+      </header>
+
+      <section class="card">
+        <div class="row row-3">
+          <button class="btn" id="modeOn" type="button">On</button>
+          <button class="btn" id="modeOff" type="button">Off</button>
+          <button class="btn" id="modeAuto" type="button">Auto</button>
+        </div>
+        <div class="hint">
+          Auto uses the schedule window and/or a countdown override.
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="label">Program</div>
+        <select id="programSelect" class="select"></select>
+
+        <div class="label">Speed</div>
+        <input id="speedRange" class="range" type="range" min="0.2" max="5" step="0.1" value="1" />
+        <div class="hint" id="speedLabel"></div>
+      </section>
+
+      <section class="card">
+        <div class="label">Countdown</div>
+        <div class="row row-4">
+          <button class="btn btn-soft" data-min="30" type="button">30m</button>
+          <button class="btn btn-soft" data-min="60" type="button">1h</button>
+          <button class="btn btn-soft" data-min="120" type="button">2h</button>
+          <button class="btn btn-ghost" id="countdownClear" type="button">Clear</button>
+        </div>
+        <div class="hint" id="countdownLine"></div>
+      </section>
+
+      <section class="card">
+        <div class="label">Daily schedule</div>
+        <div class="row row-2">
+          <label class="field">
+            <span>Start</span>
+            <input id="startTime" type="time" />
+          </label>
+          <label class="field">
+            <span>End</span>
+            <input id="endTime" type="time" />
+          </label>
+        </div>
+        <button class="btn" id="saveSchedule" type="button">Save schedule</button>
+        <div class="hint" id="scheduleHint"></div>
+      </section>
+
+      <footer class="footer">
+        <div class="hint">Tip: add this page to your iPhone Home Screen.</div>
+      </footer>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
+
+

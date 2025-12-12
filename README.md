@@ -1,35 +1,53 @@
-# rgbxmastree
+## rgbxmastree (fork)
 
-Code examples for the RGB Xmas Tree
+This fork turns the original examples into a small always-on project for the **3D RGB Xmas Tree**:
+
+- A **LAN web UI** (iPhone-friendly)
+- A **timer** (daily window + “on for X” countdown override)
+- A **systemd service** so it starts on boot
 
 ## Getting started
 
-Start by downloading the xmas tree file. Open a terminal and type:
+### Quick start (dev)
 
 ```bash
-wget https://bit.ly/2Lr9CT3 -O tree.py
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-Test the tree by running `python3 tree.py` (or running it from an IDE like Mu,
-Thonny or IDLE). All the lights should come on (white).
-
-When you write your own Python code, make sure you keep this file in the same
-folder.
-
-If you're using Raspbian Desktop, you don't need to install anything. If you're
-using Raspbian Lite, you'll need to install gpiozero with:
+Run the web UI on the Pi:
 
 ```bash
-sudo apt install python3-gpiozero
+python -m rgbxmastree --host 0.0.0.0 --port 8080
 ```
 
-Open a Python shell or IDE, import `RGBXmasTree` and initialise your tree:
+Open from your phone (same Wi‑Fi): `http://xmaspi.local:8080`
 
-```python
-from tree import RGBXmasTree
+### Raspberry Pi OS setup (recommended)
 
-tree = RGBXmasTree()
+Use the setup script (added in this fork) to install and configure the systemd service.
+
+- From the repo directory on your Pi:
+
+```bash
+chmod +x scripts/setup_pi.sh
+sudo ./scripts/setup_pi.sh
 ```
+
+- Then open: `http://xmaspi.local:8080`
+
+- Service status:
+
+```bash
+sudo systemctl status rgbxmastree.service --no-pager
+```
+
+## Original driver + examples
+
+The original low-level driver lives in `tree.py` and the examples are in `examples/`.
+
+In this fork, the driver is also available as `rgbxmastree.hardware.tree.RGBXmasTree` and the animations are in `rgbxmastree.programs`.
 
 ## Change the colour
 
