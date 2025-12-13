@@ -55,4 +55,47 @@ tree = RGBXmasTree()
 tree.color = Color("red")
 ```
 
+### Pixel mapping (`level` / `branch` / `star`)
+
+The tree body is addressed as **3 levels × 8 branches**:
+
+- `level`: `0..2` (0 is the bottom level)
+- `branch`: `0..7` (around the tree)
+- `tree.star`: the star pixel
+
+If you orient the tree so the Raspberry Pi is facing you, `branch=0` starts at the “front” and counts around.
+
+Example:
+
+```python
+from rgbxmastree.hardware.tree import RGBXmasTree
+from colorzero import Color
+
+tree = RGBXmasTree()
+tree[0, 0].color = Color("green")  # bottom/front
+tree.star.color = Color("yellow")
+```
+
+### Batching updates (`show()` / `auto_show`)
+
+By default, writes show immediately (`auto_show=True`). For faster multi-pixel updates, batch changes and call `show()` once:
+
+```python
+tree.auto_show = False
+for level in range(3):
+    for branch in range(8):
+        tree[level, branch].color = (0.0, 0.0, 1.0)
+tree.star.color = (1.0, 1.0, 1.0)
+tree.show()
+```
+
+### Brightness (`body_brightness` / `star_brightness`)
+
+Brightness is exposed as APA102 “global brightness” **ints** `0..31`:
+
+```python
+tree.body_brightness = 8
+tree.star_brightness = 2
+```
+
 Built-in programs live in `rgbxmastree/programs/`.
