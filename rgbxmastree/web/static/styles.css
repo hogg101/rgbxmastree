@@ -1,105 +1,245 @@
 :root {
-  --bg: #0b0d10;
-  --card: #12161c;
-  --text: #e9eef6;
-  --muted: #9aa6b2;
-  --line: rgba(255, 255, 255, 0.08);
-  --accent: #4da3ff;
-  --accent2: #7cdd7c;
-  --danger: #ff5c5c;
+  --bg-stripe-1: #c41e3a; /* Christmas Red */
+  --bg-stripe-2: #228b22; /* Forest Green */
+  --card-bg: #ffffff;
+  --text: #000000;
+  --muted: #666666;
+  --border: #000000;
+  --accent-gold: #ffd700;
+  --accent-red: #ff3333;
+  --accent-green: #33cc33;
+  --shadow-color: #000000;
 }
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, Arial, sans-serif;
-  background: radial-gradient(1200px 600px at 30% 0%, rgba(77,163,255,0.15), transparent 60%),
-              radial-gradient(1200px 600px at 70% 0%, rgba(124,221,124,0.12), transparent 60%),
-              var(--bg);
+  /* Monospace font for 8-bit feel */
+  font-family: "Courier New", Courier, monospace; 
+  text-transform: uppercase;
+  background-color: var(--bg-stripe-2);
+  /* Gaudy alternating stripes */
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--bg-stripe-1),
+    var(--bg-stripe-1) 20px,
+    var(--bg-stripe-2) 20px,
+    var(--bg-stripe-2) 40px
+  );
+  background-attachment: fixed;
   color: var(--text);
+  image-rendering: pixelated;
+  overflow-x: hidden; /* Prevent horizontal scroll from any potential overflows */
 }
 
 .wrap {
   max-width: 520px;
   margin: 0 auto;
-  padding: 18px 14px 34px;
+  padding: 20px 12px 40px;
 }
 
+/* Blocky Header */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 4px solid var(--border);
+  padding: 10px;
+  box-shadow: 6px 6px 0px var(--shadow-color);
 }
 
-.title { font-size: 22px; font-weight: 700; letter-spacing: 0.2px; }
-.sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.title { 
+  font-size: 20px; 
+  font-weight: 900; 
+  color: var(--bg-stripe-1);
+  text-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+}
+.sub { 
+  font-size: 10px; 
+  color: var(--muted); 
+  margin-top: 4px; 
+  font-weight: bold;
+}
 
+/* Blocky Cards */
 .card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 14px;
-  margin-top: 12px;
-  backdrop-filter: blur(8px);
+  background: var(--card-bg);
+  border: 4px solid var(--border);
+  /* No rounded corners */
+  border-radius: 0; 
+  padding: 16px;
+  margin-top: 20px;
+  box-shadow: 6px 6px 0px var(--shadow-color);
+  position: relative;
 }
 
-.row { display: grid; gap: 10px; }
+/* Decorative 'nails' or corners could go here, but keeping it simple/cleaner for responsiveness */
+
+.row { 
+  display: grid; 
+  gap: 8px; 
+}
 .row-2 { grid-template-columns: repeat(2, 1fr); }
 .row-3 { grid-template-columns: repeat(3, 1fr); }
 .row-4 { grid-template-columns: repeat(4, 1fr); }
 
+/* Responsive Grid Fixes */
+@media (max-width: 360px) {
+  /* On very narrow screens, allow 4-column rows to wrap to 2 lines */
+  .row-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 8-bit Buttons */
 .btn {
   appearance: none;
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,0.06);
+  border: 3px solid var(--border);
+  background: #eeeeee;
   color: var(--text);
-  border-radius: 12px;
-  padding: 12px 10px;
-  font-size: 16px;
-  font-weight: 650;
+  border-radius: 0;
+  padding: 12px 4px; /* Reduced side padding to prevent clashing */
+  font-size: 14px;
+  font-weight: 800;
+  font-family: inherit;
   cursor: pointer;
+  box-shadow: 3px 3px 0px var(--shadow-color);
+  text-align: center;
+  text-transform: uppercase;
+  min-width: 0; /* Prevents button from forcing grid wide */
+  transition: transform 0.05s, box-shadow 0.05s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
 }
-.btn:active { transform: translateY(1px); }
-.btn-ghost { background: transparent; }
-.btn-soft { background: rgba(77,163,255,0.08); }
+
+.btn:active { 
+  transform: translate(3px, 3px); 
+  box-shadow: none;
+}
+
+.btn-ghost { background: #fff; }
+.btn-soft { background: #d0f0c0; /* Pale green */ }
+
+/* Active States */
 .btn.active {
-  border-color: rgba(77,163,255,0.6);
-  box-shadow: 0 0 0 3px rgba(77,163,255,0.18);
+  background: var(--accent-gold);
+  border-color: #000;
+  box-shadow: 2px 2px 0px #000 inset; /* Inset shadow to look pressed */
+  transform: translate(1px, 1px);
 }
-.btn.danger.active {
-  border-color: rgba(255,92,92,0.65);
-  box-shadow: 0 0 0 3px rgba(255,92,92,0.18);
-}
-.btn.good.active {
-  border-color: rgba(124,221,124,0.65);
-  box-shadow: 0 0 0 3px rgba(124,221,124,0.18);
+#modeOn.active { background: var(--accent-green); color: #fff; text-shadow: 2px 2px 0 #000; }
+#modeOff.active { background: var(--accent-red); color: #fff; text-shadow: 2px 2px 0 #000; }
+#modeAuto.active { background: #4da3ff; color: #fff; text-shadow: 2px 2px 0 #000; }
+
+.label { 
+  font-size: 12px; 
+  font-weight: 900;
+  color: #fff; 
+  background: #000;
+  display: inline-block;
+  padding: 4px 6px;
+  margin-bottom: 8px;
 }
 
-.label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
-.hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.35; }
+.hint { 
+  font-size: 11px; 
+  color: var(--muted); 
+  margin-top: 10px; 
+  line-height: 1.35; 
+  font-weight: bold;
+}
 
+/* Inputs */
 .select, input[type="time"] {
   width: 100%;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,0.05);
+  border-radius: 0;
+  border: 3px solid var(--border);
+  background: #fff;
   color: var(--text);
-  padding: 12px 10px;
+  padding: 10px;
   font-size: 16px;
+  font-family: inherit;
+  font-weight: bold;
+  box-shadow: 3px 3px 0px var(--shadow-color);
+  appearance: none;
+}
+
+.select:focus, input[type="time"]:focus {
+  outline: 2px dashed var(--bg-stripe-1);
+  outline-offset: 2px;
+}
+
+/* Range Slider - Custom 8-bit */
+.range { 
+  width: 100%; 
+  -webkit-appearance: none;
+  background: transparent;
+  margin: 10px 0;
+}
+.range:focus { outline: none; }
+
+.range::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 12px;
+  background: #000;
+  border: 2px solid #fff;
+  outline: 2px solid #000;
+  cursor: pointer;
+}
+
+.range::-webkit-slider-thumb {
+  height: 24px;
+  width: 16px;
+  background: var(--accent-red);
+  border: 2px solid #000;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -8px; /* Center */
+  box-shadow: 2px 2px 0px #fff;
 }
 
 .field span {
   display: block;
   font-size: 12px;
-  color: var(--muted);
+  font-weight: 900;
+  color: var(--text);
   margin-bottom: 6px;
 }
 
-.range { width: 100%; }
+#saveSchedule {
+  margin-top: 12px;
+  width: 100%;
+}
 
-.footer { margin-top: 14px; text-align: center; }
+.footer { 
+  margin-top: 24px; 
+  text-align: center; 
+  background: #fff;
+  border: 4px solid #000;
+  padding: 10px;
+  box-shadow: 6px 6px 0px #000;
+}
 
+.range:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+a {
+  color: var(--bg-stripe-1);
+  font-weight: bold;
+  text-decoration: underline;
+}
+a:hover {
+  background-color: var(--accent-gold);
+  color: #000;
+  text-decoration: none;
+}
 
