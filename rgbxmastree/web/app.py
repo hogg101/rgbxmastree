@@ -19,6 +19,8 @@ def create_app(config_path: str) -> Flask:
 
     controller = TreeController(config_path=config_path)
     app.extensions["rgbxmastree_controller"] = controller
+    SPEED_MIN = 0.1
+    SPEED_MAX = 200.0
 
     @app.get("/health")
     def health():
@@ -38,6 +40,8 @@ def create_app(config_path: str) -> Flask:
                 "mode": cfg.mode,
                 "program_id": cfg.program_id,
                 "program_speed": cfg.program_speed,
+                "program_speed_min": SPEED_MIN,
+                "program_speed_max": SPEED_MAX,
                 "brightness": {
                     "body_pct": cfg.body_brightness_pct,
                     "star_pct": cfg.star_brightness_pct,
@@ -89,7 +93,7 @@ def create_app(config_path: str) -> Flask:
             speed = float(data.get("program_speed"))
         except Exception:
             return jsonify({"error": "invalid program_speed"}), 400
-        speed = max(0.1, min(10.0, speed))
+        speed = max(SPEED_MIN, min(SPEED_MAX, speed))
         cfg = controller.update_config(lambda c: setattr(c, "program_speed", speed))
         return jsonify({"ok": True, "program_speed": cfg.program_speed})
 

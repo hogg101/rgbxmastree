@@ -26,6 +26,7 @@ class TreeController:
         self._runner_thread: threading.Thread | None = None
         self._runner_stop = threading.Event()
         self._runner_program_id: str | None = None
+        self._runner_speed: float | None = None
 
         self._supervisor_stop = threading.Event()
         self._supervisor_thread = threading.Thread(target=self._supervise_loop, name="rgbxmastree-supervisor", daemon=True)
@@ -108,6 +109,7 @@ class TreeController:
 
         self._runner_stop.clear()
         self._runner_program_id = program_id
+        self._runner_speed = float(speed)
 
         def _run():
             try:
@@ -126,6 +128,7 @@ class TreeController:
             t.join(timeout=2.0)
         self._runner_thread = None
         self._runner_program_id = None
+        self._runner_speed = None
         self._runner_stop.clear()
 
     def _power_off(self) -> None:
@@ -158,6 +161,10 @@ class TreeController:
                     if self._runner_thread is None or not self._runner_thread.is_alive():
                         self._start_program(cfg.program_id, cfg.program_speed)
                     elif self._runner_program_id != cfg.program_id:
+                        self._stop_program()
+                        self._start_program(cfg.program_id, cfg.program_speed)
+                    elif self._runner_speed is None or float(cfg.program_speed) != float(self._runner_speed):
+                        # Apply speed changes immediately (restart runner with the new speed).
                         self._stop_program()
                         self._start_program(cfg.program_id, cfg.program_speed)
 

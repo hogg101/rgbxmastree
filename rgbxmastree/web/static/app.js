@@ -19,6 +19,29 @@ async function apiPost(path, body) {
 
 function $(id) { return document.getElementById(id); }
 
+function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+let speedBounds = { min: 0.1, max: 200.0 };
+
+function speedPctToValue(pct, speedMin, speedMax) {
+  // Exponential mapping: pct 0..100 -> speedMin..speedMax
+  const p = clamp(Number(pct), 0, 100) / 100;
+  const min = Number(speedMin);
+  const max = Number(speedMax);
+  if (!isFinite(min) || !isFinite(max) || min <= 0 || max <= 0 || max <= min) return 1.0;
+  return min * Math.pow(max / min, p);
+}
+
+function speedValueToPct(speed, speedMin, speedMax) {
+  // Inverse mapping: speed -> pct 0..100
+  const v = Number(speed);
+  const min = Number(speedMin);
+  const max = Number(speedMax);
+  if (!isFinite(v) || !isFinite(min) || !isFinite(max) || v <= 0 || min <= 0 || max <= 0 || max <= min) return 50;
+  const p = Math.log(v / min) / Math.log(max / min);
+  return clamp(p * 100, 0, 100);
+}
+
 function setBrightnessLabels(bodyPct, starPct) {
   if ($("bodyBrightnessLabel")) $("bodyBrightnessLabel").textContent = `Body: ${Number(bodyPct).toFixed(0)}%`;
   if ($("starBrightnessLabel")) $("starBrightnessLabel").textContent = `Star: ${Number(starPct).toFixed(0)}%`;
@@ -72,8 +95,13 @@ async function refresh() {
   setActiveMode(state.mode);
 
   // speed
-  $("speedRange").value = String(state.program_speed ?? 1.0);
-  $("speedLabel").textContent = `Speed: ${Number(state.program_speed ?? 1.0).toFixed(1)}`;
+  const speedMin = state.program_speed_min ?? speedBounds.min;
+  const speedMax = state.program_speed_max ?? speedBounds.max;
+  speedBounds = { min: speedMin, max: speedMax };
+  const speed = Number(state.program_speed ?? 1.0);
+  const pct = speedValueToPct(speed, speedMin, speedMax);
+  $("speedRange").value = String(Math.round(pct));
+  $("speedLabel").textContent = `Speed: ${Math.round(pct)}% (${speed.toFixed(2)})`;
 
   // brightness
   const bodyPct = state.brightness?.body_pct ?? 50;
@@ -115,10 +143,18 @@ function wire() {
   });
 
   $("speedRange").addEventListener("input", (e) => {
-    $("speedLabel").textContent = `Speed: ${Number(e.target.value).toFixed(1)}`;
+    const speedMin = speedBounds.min;
+    const speedMax = speedBounds.max;
+    const pct = Number(e.target.value);
+    const speed = speedPctToValue(pct, speedMin, speedMax);
+    $("speedLabel").textContent = `Speed: ${Math.round(pct)}% (${speed.toFixed(2)})`;
   });
   $("speedRange").addEventListener("change", async (e) => {
-    await apiPost("/api/speed", { program_speed: Number(e.target.value) });
+    const speedMin = speedBounds.min;
+    const speedMax = speedBounds.max;
+    const pct = Number(e.target.value);
+    const speed = speedPctToValue(pct, speedMin, speedMax);
+    await apiPost("/api/speed", { program_speed: speed });
     await refresh();
   });
 
