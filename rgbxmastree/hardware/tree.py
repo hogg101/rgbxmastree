@@ -48,10 +48,22 @@ class RGBXmasTree(SourceMixin, SPIDevice):
         brightness: float = 0.5,
         mosi_pin: int = 12,
         clock_pin: int = 25,
+        # gpiozero requires a chip-select pin for its SPI implementation. APA102 LEDs
+        # don't need chip-select, so we use a "dummy" GPIO by default.
+        #
+        # We avoid the hardware SPI CE0 pin (BCM8) because it is frequently "busy"
+        # depending on kernel SPI configuration / other processes.
+        select_pin: int = 26,
         *args,
         **kwargs,
     ):
-        super().__init__(mosi_pin=mosi_pin, clock_pin=clock_pin, *args, **kwargs)
+        super().__init__(
+            mosi_pin=mosi_pin,
+            clock_pin=clock_pin,
+            select_pin=select_pin,
+            *args,
+            **kwargs,
+        )
         if pixels != 25:
             # The physical mapping for this product is 25 pixels (24 body + 1 star).
             # We keep this configurable for testing/mocking but discourage other values.
