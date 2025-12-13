@@ -22,6 +22,7 @@ function $(id) { return document.getElementById(id); }
 function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
 
 let speedBounds = { min: 0.1, max: 200.0 };
+let speedReady = false;
 
 function speedPctToValue(pct, speedMin, speedMax) {
   // Exponential mapping: pct 0..100 -> speedMin..speedMax
@@ -102,6 +103,8 @@ async function refresh() {
   const pct = speedValueToPct(speed, speedMin, speedMax);
   $("speedRange").value = String(Math.round(pct));
   $("speedLabel").textContent = `Speed: ${Math.round(pct)}% (${speed.toFixed(2)})`;
+  $("speedRange").disabled = false;
+  speedReady = true;
 
   // brightness
   const bodyPct = state.brightness?.body_pct ?? 50;
@@ -123,6 +126,8 @@ async function refresh() {
 
 function wire() {
   $("refreshBtn").addEventListener("click", () => refresh().catch(err => alert(err.message)));
+  $("speedRange").disabled = true;
+  if ($("speedLabel")) $("speedLabel").textContent = "Speed: loading…";
 
   $("modeOn").addEventListener("click", async () => {
     await apiPost("/api/mode", { mode: "manual_on" });
@@ -143,6 +148,7 @@ function wire() {
   });
 
   $("speedRange").addEventListener("input", (e) => {
+    if (!speedReady || $("speedRange").disabled) return;
     const speedMin = speedBounds.min;
     const speedMax = speedBounds.max;
     const pct = Number(e.target.value);
@@ -150,6 +156,7 @@ function wire() {
     $("speedLabel").textContent = `Speed: ${Math.round(pct)}% (${speed.toFixed(2)})`;
   });
   $("speedRange").addEventListener("change", async (e) => {
+    if (!speedReady || $("speedRange").disabled) return;
     const speedMin = speedBounds.min;
     const speedMax = speedBounds.max;
     const pct = Number(e.target.value);
