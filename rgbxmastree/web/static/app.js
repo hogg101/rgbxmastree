@@ -19,6 +19,11 @@ async function apiPost(path, body) {
 
 function $(id) { return document.getElementById(id); }
 
+function setBrightnessLabels(bodyPct, starPct) {
+  if ($("bodyBrightnessLabel")) $("bodyBrightnessLabel").textContent = `Body: ${Number(bodyPct).toFixed(0)}%`;
+  if ($("starBrightnessLabel")) $("starBrightnessLabel").textContent = `Star: ${Number(starPct).toFixed(0)}%`;
+}
+
 function setActiveMode(mode) {
   const on = $("modeOn"), off = $("modeOff"), auto = $("modeAuto");
   [on, off, auto].forEach(b => b.classList.remove("active", "good", "danger"));
@@ -70,6 +75,13 @@ async function refresh() {
   $("speedRange").value = String(state.program_speed ?? 1.0);
   $("speedLabel").textContent = `Speed: ${Number(state.program_speed ?? 1.0).toFixed(1)}`;
 
+  // brightness
+  const bodyPct = state.brightness?.body_pct ?? 50;
+  const starPct = state.brightness?.star_pct ?? 50;
+  if ($("bodyBrightnessRange")) $("bodyBrightnessRange").value = String(bodyPct);
+  if ($("starBrightnessRange")) $("starBrightnessRange").value = String(starPct);
+  setBrightnessLabels(bodyPct, starPct);
+
   // schedule
   $("startTime").value = state.schedule?.start_hhmm ?? "07:30";
   $("endTime").value = state.schedule?.end_hhmm ?? "23:00";
@@ -109,6 +121,30 @@ function wire() {
     await apiPost("/api/speed", { program_speed: Number(e.target.value) });
     await refresh();
   });
+
+  // brightness sliders
+  if ($("bodyBrightnessRange")) {
+    $("bodyBrightnessRange").addEventListener("input", (e) => {
+      const body = Number(e.target.value);
+      const star = Number($("starBrightnessRange")?.value ?? 50);
+      setBrightnessLabels(body, star);
+    });
+    $("bodyBrightnessRange").addEventListener("change", async (e) => {
+      await apiPost("/api/brightness", { body_pct: Number(e.target.value) });
+      await refresh();
+    });
+  }
+  if ($("starBrightnessRange")) {
+    $("starBrightnessRange").addEventListener("input", (e) => {
+      const star = Number(e.target.value);
+      const body = Number($("bodyBrightnessRange")?.value ?? 50);
+      setBrightnessLabels(body, star);
+    });
+    $("starBrightnessRange").addEventListener("change", async (e) => {
+      await apiPost("/api/brightness", { star_pct: Number(e.target.value) });
+      await refresh();
+    });
+  }
 
   for (const btn of document.querySelectorAll("button[data-min]")) {
     btn.addEventListener("click", async () => {

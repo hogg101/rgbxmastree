@@ -38,6 +38,10 @@ def create_app(config_path: str) -> Flask:
                 "mode": cfg.mode,
                 "program_id": cfg.program_id,
                 "program_speed": cfg.program_speed,
+                "brightness": {
+                    "body_pct": cfg.body_brightness_pct,
+                    "star_pct": cfg.star_brightness_pct,
+                },
                 "schedule": {
                     "start_hhmm": cfg.schedule.start_hhmm,
                     "end_hhmm": cfg.schedule.end_hhmm,
@@ -126,6 +130,39 @@ def create_app(config_path: str) -> Flask:
 
         cfg = controller.update_config(_mut)
         return jsonify({"ok": True, "schedule": {"start_hhmm": cfg.schedule.start_hhmm, "end_hhmm": cfg.schedule.end_hhmm, "days": cfg.schedule.days}})
+
+    @app.post("/api/brightness")
+    def api_brightness():
+        data = request.get_json(force=True, silent=True) or {}
+
+        def _parse_pct(key: str) -> int | None:
+            if key not in data:
+                return None
+            try:
+                v = int(float(data.get(key)))
+            except Exception:
+                raise ValueError(f"invalid {key}")
+            return max(0, min(100, v))
+
+        try:
+            body_pct = _parse_pct("body_pct")
+            star_pct = _parse_pct("star_pct")
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+
+        def _mut(c):
+            if body_pct is not None:
+                c.body_brightness_pct = body_pct
+            if star_pct is not None:
+                c.star_brightness_pct = star_pct
+
+        cfg = controller.update_config(_mut)
+        return jsonify(
+            {
+                "ok": True,
+                "brightness": {"body_pct": cfg.body_brightness_pct, "star_pct": cfg.star_brightness_pct},
+            }
+        )
 
     @app.teardown_appcontext
     def _teardown(_exc):

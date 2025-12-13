@@ -43,6 +43,9 @@ class AppConfig:
     mode: Mode = "auto"
     program_id: str = "rgb_cycle"
     program_speed: float = 1.0
+    # Brightness controls (0..100 percent). Mapped to APA102 0..31 bits by controller.
+    body_brightness_pct: int = 50
+    star_brightness_pct: int = 50
     schedule: Schedule = field(default_factory=Schedule)
     # ISO 8601 local time string (no timezone) or None
     countdown_until: str | None = None
@@ -73,6 +76,8 @@ def load_config(path: str) -> AppConfig:
         mode=raw.get("mode", "auto"),
         program_id=raw.get("program_id", "rgb_cycle"),
         program_speed=float(raw.get("program_speed", 1.0)),
+        body_brightness_pct=int(raw.get("body_brightness_pct", 50)),
+        star_brightness_pct=int(raw.get("star_brightness_pct", 50)),
         schedule=Schedule(
             start_hhmm=schedule_raw.get("start_hhmm", "07:30"),
             end_hhmm=schedule_raw.get("end_hhmm", "23:00"),
@@ -90,6 +95,10 @@ def save_config(path: str, cfg: AppConfig) -> None:
     # Ensure schedule format stays HH:MM even if we later store parsed values.
     data["schedule"]["start_hhmm"] = _fmt_hhmm(_parse_hhmm(cfg.schedule.start_hhmm))
     data["schedule"]["end_hhmm"] = _fmt_hhmm(_parse_hhmm(cfg.schedule.end_hhmm))
+
+    # Clamp brightness to sane bounds before persisting (defensive against manual edits).
+    data["body_brightness_pct"] = max(0, min(100, int(data.get("body_brightness_pct", 50))))
+    data["star_brightness_pct"] = max(0, min(100, int(data.get("star_brightness_pct", 50))))
 
     fd, tmp_path = tempfile.mkstemp(prefix="rgbxmastree_", suffix=".json", dir=os.path.dirname(path) or ".")
     try:

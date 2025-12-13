@@ -74,6 +74,30 @@ class TreeController:
             self._tree = RGBXmasTree()
         return self._tree
 
+    @staticmethod
+    def _pct_to_bits(pct: int) -> int:
+        # Map 0..100 to APA102 brightness bits 0..31
+        try:
+            p = int(pct)
+        except Exception:
+            p = 50
+        p = max(0, min(100, p))
+        return max(0, min(31, int(round(p * 31 / 100))))
+
+    def _apply_brightness(self, cfg: AppConfig) -> None:
+        if self._tree is None:
+            return
+        body_bits = self._pct_to_bits(cfg.body_brightness_pct)
+        star_bits = self._pct_to_bits(cfg.star_brightness_pct)
+        try:
+            if self._tree.body_brightness != body_bits:
+                self._tree.body_brightness = body_bits
+            if self._tree.star_brightness != star_bits:
+                self._tree.star_brightness = star_bits
+        except Exception:
+            # Hardware errors shouldn't crash the supervisor loop.
+            pass
+
     def _start_program(self, program_id: str, speed: float) -> None:
         spec = PROGRAMS.get(program_id)
         if spec is None:
@@ -127,6 +151,9 @@ class TreeController:
                     self._stop_program()
                     self._power_off()
                 else:
+                    # Ensure driver exists and stays configured (brightness can change at runtime).
+                    self._ensure_tree()
+                    self._apply_brightness(cfg)
                     # Ensure correct program is running
                     if self._runner_thread is None or not self._runner_thread.is_alive():
                         self._start_program(cfg.program_id, cfg.program_speed)
