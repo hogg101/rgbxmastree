@@ -186,17 +186,12 @@ def navi(tree: RGBXmasTree, stop: Event, speed: float = 1.0) -> None:
                 pixel.color = fairy_color
                 pixel_colors[pixel] = fairy_color
                 
-                # If current pixel is the star, it keeps its fairy color (don't fade it)
-                # Star color persists until next fairy reaches it
-                
             finally:
                 tree.auto_show = prev_auto
                 tree.show()
             
             sleep(delay)
         
-        # When fairy reaches star, star color is already set to fairy color
-        # (it was set in the loop above)
-        
-        # Brief pause before next fairy starts
-        sleep(delay * 2)
+        # Longer pause before next fairy starts - allows trail to fade and star color to be visible
+        pause_duration = max(1.5, delay * 15)  # At least 1.5 seconds, or 15x the normal delay
+        sleep(pause_duration)
