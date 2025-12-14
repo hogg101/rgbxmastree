@@ -149,6 +149,15 @@ body {
   margin-bottom: 8px;
 }
 
+.sub-label {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  display: block;
+}
+
 .hint { 
   font-size: 11px; 
   color: var(--muted); 

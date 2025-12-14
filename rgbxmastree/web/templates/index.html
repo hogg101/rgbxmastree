@@ -17,6 +17,7 @@
       </header>
 
       <section class="card">
+        <div class="label">Mode</div>
         <div class="row row-3">
           <button class="btn" id="modeOn" type="button">On</button>
           <button class="btn" id="modeOff" type="button">Off</button>
@@ -28,10 +29,10 @@
       </section>
 
       <section class="card">
-        <div class="label">Program</div>
+        <div class="label">Program Select</div>
         <select id="programSelect" class="select"></select>
 
-        <div class="label">Speed</div>
+        <div class="label" style="margin-top: 20px;">Speed</div>
         <input id="speedRange" class="range" type="range" min="0" max="100" step="1" value="0" disabled />
         <div class="hint" id="speedLabel"></div>
       </section>
@@ -39,13 +40,17 @@
       <section class="card">
         <div class="label">Brightness</div>
 
-        <div class="label">Body</div>
-        <input id="bodyBrightnessRange" class="range" type="range" min="0" max="100" step="1" value="50" />
-        <div class="hint" id="bodyBrightnessLabel"></div>
+        <div style="margin-top: 10px;">
+          <div class="sub-label">Body</div>
+          <input id="bodyBrightnessRange" class="range" type="range" min="0" max="100" step="1" value="50" />
+          <div class="hint" id="bodyBrightnessLabel"></div>
+        </div>
 
-        <div class="label">Star</div>
-        <input id="starBrightnessRange" class="range" type="range" min="0" max="100" step="1" value="50" />
-        <div class="hint" id="starBrightnessLabel"></div>
+        <div style="margin-top: 10px;">
+          <div class="sub-label">Star</div>
+          <input id="starBrightnessRange" class="range" type="range" min="0" max="100" step="1" value="50" />
+          <div class="hint" id="starBrightnessLabel"></div>
+        </div>
       </section>
 
       <section class="card">
