@@ -46,20 +46,62 @@ def _color_distance(c1: tuple[float, float, float], c2: tuple[float, float, floa
 
 def _generate_fairy_color(previous_color: tuple[float, float, float] | None, min_separation: float = 0.5) -> tuple[float, float, float]:
     """
-    Generate a random RGB color that is sufficiently different from the previous color.
+    Generate a bold, vibrant RGB color that is sufficiently different from the previous color.
+    
+    Colors are guaranteed to be bold by ensuring at least one component is near maximum
+    and the color has high saturation (not too gray/muted).
     
     Args:
         previous_color: The previous fairy color, or None for the first color
         min_separation: Minimum color distance required (default 0.5)
     
     Returns:
-        A new RGB tuple with values in 0.0-1.0 range
+        A new bold RGB tuple with values in 0.0-1.0 range
     """
     max_attempts = 50
     
     for _ in range(max_attempts):
-        # Generate random RGB color
-        new_color = (random.random(), random.random(), random.random())
+        # Generate bold, vibrant color
+        # Ensure at least one component is very high (0.9-1.0) for boldness
+        # And ensure minimum saturation (not too gray)
+        r = random.random()
+        g = random.random()
+        b = random.random()
+        
+        # Boost the highest component to near maximum for boldness
+        max_component = max(r, g, b)
+        if max_component < 0.7:
+            # If nothing is bright enough, boost the highest one
+            if r == max_component:
+                r = random.uniform(0.85, 1.0)
+            elif g == max_component:
+                g = random.uniform(0.85, 1.0)
+            else:
+                b = random.uniform(0.85, 1.0)
+        else:
+            # Boost the max component even more
+            if r == max_component:
+                r = random.uniform(0.9, 1.0)
+            elif g == max_component:
+                g = random.uniform(0.9, 1.0)
+            else:
+                b = random.uniform(0.9, 1.0)
+        
+        # Ensure minimum saturation - at least one component should be significantly lower
+        min_component = min(r, g, b)
+        if (max(r, g, b) - min_component) < 0.3:
+            # Too gray, boost contrast
+            if r == max_component:
+                b = random.uniform(0.0, 0.4)
+                g = random.uniform(0.0, 0.5)
+            elif g == max_component:
+                r = random.uniform(0.0, 0.4)
+                b = random.uniform(0.0, 0.5)
+            else:
+                r = random.uniform(0.0, 0.4)
+                g = random.uniform(0.0, 0.5)
+        
+        new_color = (_clamp01(r), _clamp01(g), _clamp01(b))
         
         # If no previous color, return immediately
         if previous_color is None:
@@ -70,8 +112,24 @@ def _generate_fairy_color(previous_color: tuple[float, float, float] | None, min
         if distance >= min_separation:
             return new_color
     
-    # If we couldn't find a sufficiently different color, return a random one anyway
-    return (random.random(), random.random(), random.random())
+    # If we couldn't find a sufficiently different color, generate a bold one anyway
+    r = random.random()
+    g = random.random()
+    b = random.random()
+    max_idx = 0 if r >= g and r >= b else (1 if g >= b else 2)
+    if max_idx == 0:
+        r = random.uniform(0.9, 1.0)
+        g = random.uniform(0.0, 0.5)
+        b = random.uniform(0.0, 0.5)
+    elif max_idx == 1:
+        r = random.uniform(0.0, 0.5)
+        g = random.uniform(0.9, 1.0)
+        b = random.uniform(0.0, 0.5)
+    else:
+        r = random.uniform(0.0, 0.5)
+        g = random.uniform(0.0, 0.5)
+        b = random.uniform(0.9, 1.0)
+    return (_clamp01(r), _clamp01(g), _clamp01(b))
 
 
 def _generate_corkscrew_path(tree: RGBXmasTree) -> list:
@@ -145,10 +203,10 @@ def navi(tree: RGBXmasTree, stop: Event, speed: float = 1.0) -> None:
     previous_fairy_color: tuple[float, float, float] | None = None
     
     # Trail fade rate (how quickly pixels fade back to warm white)
-    # Use a smaller base rate for smoother fading
-    # Higher speed = slightly faster fade, but keep it gentle
-    base_fade_rate = 0.02  # 2% per frame
-    fade_rate = _clamp01(base_fade_rate * (1.0 + (s / 50.0)))  # Scale with speed but cap it
+    # Higher fade rate = faster fade back to white
+    # Higher speed = faster fade
+    base_fade_rate = 0.15  # 15% per frame - quick fade back
+    fade_rate = _clamp01(base_fade_rate * (1.0 + (s / 20.0)))  # Scale with speed
     
     while not stop.is_set():
         # Generate new fairy color
@@ -193,5 +251,11 @@ def navi(tree: RGBXmasTree, stop: Event, speed: float = 1.0) -> None:
             sleep(delay)
         
         # Longer pause before next fairy starts - allows trail to fade and star color to be visible
+        # Break into small chunks and check stop event to allow immediate exit
         pause_duration = max(5.0, delay * 50)  # At least 5 seconds, or 50x the normal delay
-        sleep(pause_duration)
+        chunk_size = 0.1  # Check stop event every 100ms
+        chunks = int(pause_duration / chunk_size)
+        for _ in range(chunks):
+            if stop.is_set():
+                return
+            sleep(chunk_size)
