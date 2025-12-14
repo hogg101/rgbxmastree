@@ -6,7 +6,9 @@ from rgbxmastree.programs.hue_cycle import hue_cycle
 from rgbxmastree.programs.navi import navi
 from rgbxmastree.programs.one_by_one import one_by_one
 from rgbxmastree.programs.random_sparkles import random_sparkles
+from rgbxmastree.programs.rainbow_snake import rainbow_snake
 from rgbxmastree.programs.rgb_cycle import rgb_cycle
+from rgbxmastree.programs.snowfall import snowfall
 
 
 PROGRAMS: dict[str, ProgramSpec] = {
@@ -44,6 +46,18 @@ PROGRAMS: dict[str, ProgramSpec] = {
         id="random_sparkles",
         name="Legacy: Random Sparkles",
         runner=random_sparkles,
+        default_speed=1.0,
+    ),
+    "rainbow_snake": ProgramSpec(
+        id="rainbow_snake",
+        name="Rainbow Snake",
+        runner=rainbow_snake,
+        default_speed=1.0,
+    ),
+    "snowfall": ProgramSpec(
+        id="snowfall",
+        name="Snowfall",
+        runner=snowfall,
         default_speed=1.0,
     ),
 }
