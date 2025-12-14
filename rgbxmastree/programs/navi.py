@@ -203,10 +203,10 @@ def navi(tree: RGBXmasTree, stop: Event, speed: float = 1.0) -> None:
     previous_fairy_color: tuple[float, float, float] | None = None
     
     # Trail fade rate (how quickly pixels fade back to warm white)
-    # Higher fade rate = faster fade back to white
-    # Higher speed = faster fade
-    base_fade_rate = 0.15  # 15% per frame - quick fade back
-    fade_rate = _clamp01(base_fade_rate * (1.0 + (s / 20.0)))  # Scale with speed
+    # Lower fade rate = slower, more visible fade
+    # Scale with speed but keep it gentle for visible trail
+    base_fade_rate = 0.08  # 8% per frame - visible fade
+    fade_rate = _clamp01(base_fade_rate * (1.0 + (s / 30.0)))  # Scale with speed, but more gently
     
     while not stop.is_set():
         # Generate new fairy color
@@ -222,13 +222,9 @@ def navi(tree: RGBXmasTree, stop: Event, speed: float = 1.0) -> None:
             prev_auto = tree.auto_show
             tree.auto_show = False
             try:
-                # Fade body pixels towards warm white (exclude star and current pixel)
-                # Star keeps its fairy color, current pixel will be set to fairy color below
+                # First, fade all body pixels towards warm white
+                # (current pixel will be overwritten with fairy color below)
                 for px in body_pixels:
-                    # Skip the current pixel - it will be set to fairy color
-                    if px is pixel:
-                        continue
-                    
                     current_color = pixel_colors.get(px, warm_white)
                     # Interpolate towards warm white
                     faded_r = _lerp(current_color[0], warm_white[0], fade_rate)
@@ -240,9 +236,14 @@ def navi(tree: RGBXmasTree, stop: Event, speed: float = 1.0) -> None:
                     px.color = faded_color
                     pixel_colors[px] = faded_color
                 
-                # Set current pixel to fairy color (this creates the trail)
-                pixel.color = fairy_color
-                pixel_colors[pixel] = fairy_color
+                # Then set current pixel to fairy color (overwrites the fade for this pixel)
+                # This creates the trail effect
+                if pixel is not star:  # Only update pixel_colors for body pixels
+                    pixel.color = fairy_color
+                    pixel_colors[pixel] = fairy_color
+                else:
+                    # Star keeps its fairy color and doesn't fade
+                    pixel.color = fairy_color
                 
             finally:
                 tree.auto_show = prev_auto
