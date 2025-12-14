@@ -50,6 +50,7 @@ For normal code updates (no dependency changes):
 ```bash
 cd /path/to/your/rgbxmastree/checkout
 git pull
+chmod +x scripts/update_pi.sh
 sudo ./scripts/update_pi.sh
 ```
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from rgbxmastree.programs.base import ProgramSpec
 from rgbxmastree.programs.candles import candles
 from rgbxmastree.programs.hue_cycle import hue_cycle
+from rgbxmastree.programs.navi import navi
 from rgbxmastree.programs.one_by_one import one_by_one
 from rgbxmastree.programs.random_sparkles import random_sparkles
 from rgbxmastree.programs.rgb_cycle import rgb_cycle
@@ -13,6 +14,12 @@ PROGRAMS: dict[str, ProgramSpec] = {
         id="candles",
         name="Candles",
         runner=candles,
+        default_speed=1.0,
+    ),
+    "navi": ProgramSpec(
+        id="navi",
+        name="Navi",
+        runner=navi,
         default_speed=1.0,
     ),
     "rgb_cycle": ProgramSpec(
