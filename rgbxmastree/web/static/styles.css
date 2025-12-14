@@ -98,6 +98,7 @@ body {
 
 /* 8-bit Buttons */
 .btn {
+  -webkit-appearance: none;
   appearance: none;
   border: 3px solid var(--border);
   background: #eeeeee;
@@ -180,6 +181,7 @@ body {
 .range { 
   width: 100%; 
   -webkit-appearance: none;
+  appearance: none;
   background: transparent;
   margin: 10px 0;
 }
@@ -201,6 +203,7 @@ body {
   border: 2px solid #000;
   cursor: pointer;
   -webkit-appearance: none;
+  appearance: none;
   margin-top: -8px; /* Center */
   box-shadow: 2px 2px 0px #fff;
 }
