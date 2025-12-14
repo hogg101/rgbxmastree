@@ -193,5 +193,5 @@ def navi(tree: RGBXmasTree, stop: Event, speed: float = 1.0) -> None:
             sleep(delay)
         
         # Longer pause before next fairy starts - allows trail to fade and star color to be visible
-        pause_duration = max(1.5, delay * 15)  # At least 1.5 seconds, or 15x the normal delay
+        pause_duration = max(5.0, delay * 50)  # At least 5 seconds, or 50x the normal delay
         sleep(pause_duration)
