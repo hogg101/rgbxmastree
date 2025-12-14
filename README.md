@@ -43,6 +43,23 @@ sudo ./scripts/setup_pi.sh
 sudo systemctl status rgbxmastree.service --no-pager
 ```
 
+### Updating on the Pi
+
+For normal code updates (no dependency changes):
+
+```bash
+cd /path/to/your/rgbxmastree/checkout
+git pull
+sudo ./scripts/update_pi.sh
+```
+
+This syncs your checkout into `/opt/rgbxmastree` and restarts `rgbxmastree.service` (it does **not** run `apt` or reinstall Python deps).
+
+Re-run `sudo ./scripts/setup_pi.sh` when:
+
+- it’s a first-time install (no `/opt/rgbxmastree` yet)
+- `requirements.txt` changed and you need new Python dependencies
+
 ## Low-level control (optional)
 
 If you want to write your own programs, you can import the hardware driver:

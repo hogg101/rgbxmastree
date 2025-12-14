@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "${1:-}" == "--update" ]]; then
+  # Fast path: skip OS deps + venv recreation; just sync code, pip install, restart.
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  exec "${SCRIPT_DIR}/update_pi.sh"
+fi
+
 if [[ "${EUID}" -ne 0 ]]; then
   echo "Please run with sudo: sudo $0"
   exit 1
