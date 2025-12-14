@@ -23,10 +23,10 @@ def _warm_white_rgb() -> tuple[float, float, float]:
     Many RGB LEDs skew green in the "white" region. This palette intentionally
     keeps green lower to ensure warm white doesn't look green.
     """
-    # Start with warm white RGB values
+    # Start with warmer white RGB values (more red/orange, less blue)
     r = 1.0
-    g = 0.85
-    b = 0.65
+    g = 0.80
+    b = 0.35
     
     # LED correction: tame green a bit (same as candles.py).
     g *= 0.82
@@ -145,8 +145,10 @@ def navi(tree: RGBXmasTree, stop: Event, speed: float = 1.0) -> None:
     previous_fairy_color: tuple[float, float, float] | None = None
     
     # Trail fade rate (how quickly pixels fade back to warm white)
-    # Higher speed = faster fade
-    fade_rate = _clamp01(0.1 * (s / 10.0))
+    # Use a smaller base rate for smoother fading
+    # Higher speed = slightly faster fade, but keep it gentle
+    base_fade_rate = 0.02  # 2% per frame
+    fade_rate = _clamp01(base_fade_rate * (1.0 + (s / 50.0)))  # Scale with speed but cap it
     
     while not stop.is_set():
         # Generate new fairy color
@@ -162,8 +164,13 @@ def navi(tree: RGBXmasTree, stop: Event, speed: float = 1.0) -> None:
             prev_auto = tree.auto_show
             tree.auto_show = False
             try:
-                # Fade all pixels towards warm white
-                for px in tree:
+                # Fade body pixels towards warm white (exclude star and current pixel)
+                # Star keeps its fairy color, current pixel will be set to fairy color below
+                for px in body_pixels:
+                    # Skip the current pixel - it will be set to fairy color
+                    if px is pixel:
+                        continue
+                    
                     current_color = pixel_colors.get(px, warm_white)
                     # Interpolate towards warm white
                     faded_r = _lerp(current_color[0], warm_white[0], fade_rate)
@@ -175,9 +182,12 @@ def navi(tree: RGBXmasTree, stop: Event, speed: float = 1.0) -> None:
                     px.color = faded_color
                     pixel_colors[px] = faded_color
                 
-                # Set current pixel to fairy color
+                # Set current pixel to fairy color (this creates the trail)
                 pixel.color = fairy_color
                 pixel_colors[pixel] = fairy_color
+                
+                # If current pixel is the star, it keeps its fairy color (don't fade it)
+                # Star color persists until next fairy reaches it
                 
             finally:
                 tree.auto_show = prev_auto
