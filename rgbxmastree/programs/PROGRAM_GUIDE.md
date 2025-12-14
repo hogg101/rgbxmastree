@@ -2,6 +2,10 @@
 
 This guide explains how to write programs for the RGB Xmas Tree.
 
+## Important: Keep It Christmas!
+
+**Remember: This is a Christmas tree!** When creating new programs, please focus on Christmas-themed effects. Think about traditional holiday colors (red, green, gold, white), winter themes (snow, ice, stars), and festive patterns (candles, ornaments, candy canes, etc.). While creative programs are welcome, please keep the Christmas spirit in mind!
+
 ## Program Structure
 
 All programs must follow this function signature:
@@ -213,13 +217,14 @@ PROGRAMS: dict[str, ProgramSpec] = {
 
 ## Best Practices
 
-1. **Always check `stop.is_set()`** before long operations or sleeps
-2. **Use batched updates** when updating multiple pixels
-3. **Handle speed properly** using the standard pattern
-4. **Keep it simple** - no cleanup needed, just return when stopped
-5. **Break long sleeps into chunks** to check stop events frequently
-6. **Use descriptive docstrings** explaining what your program does
-7. **Follow existing patterns** - look at `candles.py` for a good example
+1. **Keep it Christmas-themed!** Focus on holiday colors, winter themes, and festive patterns
+2. **Always check `stop.is_set()`** before long operations or sleeps
+3. **Use batched updates** when updating multiple pixels
+4. **Handle speed properly** using the standard pattern
+5. **Keep it simple** - no cleanup needed, just return when stopped
+6. **Break long sleeps into chunks** to check stop events frequently
+7. **Use descriptive docstrings** explaining what your program does
+8. **Follow existing patterns** - look at `candles.py` for a good example
 
 ## Common Pitfalls
 
