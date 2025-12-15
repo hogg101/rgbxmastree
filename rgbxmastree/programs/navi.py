@@ -44,92 +44,44 @@ def _color_distance(c1: tuple[float, float, float], c2: tuple[float, float, floa
     return math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2)
 
 
-def _generate_fairy_color(previous_color: tuple[float, float, float] | None, min_separation: float = 0.5) -> tuple[float, float, float]:
+# Classic C9 bulb colors from vintage_lights.py
+_VINTAGE_PALETTE = [
+    (1.0, 0.0, 0.0),      # Red
+    (0.0, 1.0, 0.0),      # Green
+    (0.0, 0.0, 1.0),      # Blue
+    (1.0, 0.5, 0.0),      # Orange/Gold
+    (1.0, 0.0, 1.0),      # Pink/Magenta
+]
+
+
+def _generate_fairy_color(previous_color: tuple[float, float, float] | None) -> tuple[float, float, float]:
     """
-    Generate a bold, vibrant RGB color that is sufficiently different from the previous color.
+    Generate a fairy color from the vintage lights palette that's different from the previous color.
     
-    Colors are guaranteed to be bold by ensuring at least one component is near maximum
-    and the color has high saturation (not too gray/muted).
+    Uses classic C9 bulb colors: Red, Green, Blue, Orange/Gold, Pink/Magenta.
     
     Args:
         previous_color: The previous fairy color, or None for the first color
-        min_separation: Minimum color distance required (default 0.5)
     
     Returns:
-        A new bold RGB tuple with values in 0.0-1.0 range
+        A color from the vintage palette that's different from the previous one
     """
-    max_attempts = 50
+    if previous_color is None:
+        # First color - pick randomly
+        return random.choice(_VINTAGE_PALETTE)
     
-    for _ in range(max_attempts):
-        # Generate bold, vibrant color
-        # Ensure at least one component is very high (0.9-1.0) for boldness
-        # And ensure minimum saturation (not too gray)
-        r = random.random()
-        g = random.random()
-        b = random.random()
-        
-        # Boost the highest component to near maximum for boldness
-        max_component = max(r, g, b)
-        if max_component < 0.7:
-            # If nothing is bright enough, boost the highest one
-            if r == max_component:
-                r = random.uniform(0.85, 1.0)
-            elif g == max_component:
-                g = random.uniform(0.85, 1.0)
-            else:
-                b = random.uniform(0.85, 1.0)
-        else:
-            # Boost the max component even more
-            if r == max_component:
-                r = random.uniform(0.9, 1.0)
-            elif g == max_component:
-                g = random.uniform(0.9, 1.0)
-            else:
-                b = random.uniform(0.9, 1.0)
-        
-        # Ensure minimum saturation - at least one component should be significantly lower
-        min_component = min(r, g, b)
-        if (max(r, g, b) - min_component) < 0.3:
-            # Too gray, boost contrast
-            if r == max_component:
-                b = random.uniform(0.0, 0.4)
-                g = random.uniform(0.0, 0.5)
-            elif g == max_component:
-                r = random.uniform(0.0, 0.4)
-                b = random.uniform(0.0, 0.5)
-            else:
-                r = random.uniform(0.0, 0.4)
-                g = random.uniform(0.0, 0.5)
-        
-        new_color = (_clamp01(r), _clamp01(g), _clamp01(b))
-        
-        # If no previous color, return immediately
-        if previous_color is None:
-            return new_color
-        
-        # Check if color is sufficiently different
-        distance = _color_distance(new_color, previous_color)
-        if distance >= min_separation:
-            return new_color
+    # Find colors that are different from the previous one
+    available_colors = [
+        color for color in _VINTAGE_PALETTE
+        if _color_distance(color, previous_color) > 0.3
+    ]
     
-    # If we couldn't find a sufficiently different color, generate a bold one anyway
-    r = random.random()
-    g = random.random()
-    b = random.random()
-    max_idx = 0 if r >= g and r >= b else (1 if g >= b else 2)
-    if max_idx == 0:
-        r = random.uniform(0.9, 1.0)
-        g = random.uniform(0.0, 0.5)
-        b = random.uniform(0.0, 0.5)
-    elif max_idx == 1:
-        r = random.uniform(0.0, 0.5)
-        g = random.uniform(0.9, 1.0)
-        b = random.uniform(0.0, 0.5)
+    # If we have options, pick from them, otherwise just pick any color
+    if available_colors:
+        return random.choice(available_colors)
     else:
-        r = random.uniform(0.0, 0.5)
-        g = random.uniform(0.0, 0.5)
-        b = random.uniform(0.9, 1.0)
-    return (_clamp01(r), _clamp01(g), _clamp01(b))
+        # Fallback: pick a random color from the palette
+        return random.choice(_VINTAGE_PALETTE)
 
 
 def _generate_corkscrew_path(tree: RGBXmasTree) -> list:

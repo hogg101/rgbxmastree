@@ -1,119 +1,239 @@
-## rgbxmastree (fork)
+# RGB Christmas Tree Controller
 
-This fork turns the original examples into a small always-on project for the **3D RGB Xmas Tree**:
+Control your 3D RGB Christmas Tree from your phone. This project gives you a web-based remote control (think "CyberTree.EXE") that runs on a Raspberry Pi and lets you:
 
-- A **LAN web UI** (iPhone-friendly)
-- A **timer** (daily window + “on for X” countdown override)
-- A **systemd service** so it starts on boot
+- Choose from 15+ built-in light patterns (candles, snowfall, candy cane, rainbow snake, and more)
+- Control brightness and animation speed
+- Set a daily schedule so your tree turns on and off automatically
+- Use countdown timers for "stay on for 2 more hours" scenarios
+- Access everything from your phone's browser on your home network
 
-## Getting started
+The whole thing runs automatically when your Raspberry Pi boots up, so you can just plug it in and forget about it.
 
-### Quick start (dev)
+![CyberTree.EXE Web Interface](docs/cybertree-screenshot.png)
+
+## What You'll Need
+
+- A **3D RGB Xmas Tree** from [The Pi Hut](https://thepihut.com/products/3d-rgb-xmas-tree-for-raspberry-pi) or similar
+- A **Raspberry Pi** (any model that fits the tree will work)
+- A **microSD card** with fresh Raspberry Pi OS installed
+- Your Pi connected to your home Wi-Fi
+
+That's it. No soldering, no electronics knowledge required.
+
+## Installation Guide
+
+This guide assumes you're starting with a fresh Raspberry Pi OS installation. If you're comfortable with the terminal, this should take about 5-10 minutes.
+
+### Step 1: Connect to your Raspberry Pi
+
+SSH into your Pi or open a terminal window if you're using it with a keyboard and monitor:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+ssh pi@<your-pi-ip-address>
 ```
 
-Run the web UI on the Pi:
+(Or use your Pi's hostname if you prefer)
+
+The default password is usually `raspberry` (but you should change it).
+
+### Step 2: Install git
+
+If git isn't already installed:
 
 ```bash
-python -m rgbxmastree --host 0.0.0.0 --port 8080
+sudo apt update
+sudo apt install -y git
 ```
 
-Open from your phone (same Wi‑Fi): `http://xmaspi.local:8080`
+### Step 3: Download this project
 
-### Raspberry Pi OS setup (recommended)
+Clone this repository to your home directory:
 
-Use the setup script (added in this fork) to install and configure the systemd service.
+```bash
+cd ~
+git clone https://github.com/hogg101/rgbxmastree.git
+cd rgbxmastree
+```
 
-- From the repo directory on your Pi:
+### Step 4: Run the setup script
+
+This script installs everything and sets up the tree to start automatically when your Pi boots:
 
 ```bash
 chmod +x scripts/setup_pi.sh
 sudo ./scripts/setup_pi.sh
 ```
 
-- Then open: `http://xmaspi.local:8080`
+The script will:
+- Install Python dependencies
+- Copy everything to `/opt/rgbxmastree`
+- Set up a system service that starts on boot
+- Start the tree controller
 
-- Service status:
+### Step 5: Open the web interface
+
+On your phone or computer (connected to the same Wi-Fi), open your browser and go to your Pi's IP address (or hostname):
+
+```
+http://192.168.1.XXX:8080
+```
+
+(Find your Pi's IP address by running `hostname -I` on the Pi)
+
+### Step 6: Enjoy!
+
+You should now see the **CyberTree.EXE** interface. Try switching between programs, adjusting the brightness, and setting up your daily schedule.
+
+## Updating the Software
+
+If you want to pull in new light patterns or bug fixes:
+
+```bash
+cd ~/rgbxmastree
+git pull
+sudo ./scripts/update_pi.sh
+```
+
+This will update the code and restart the tree service.
+
+## Checking Status
+
+Want to see if the service is running properly?
 
 ```bash
 sudo systemctl status rgbxmastree.service --no-pager
 ```
 
-### Updating on the Pi
-
-For normal code updates (no dependency changes):
+To restart it manually:
 
 ```bash
-cd /path/to/your/rgbxmastree/checkout
-git pull
-chmod +x scripts/update_pi.sh
-sudo ./scripts/update_pi.sh
+sudo systemctl restart rgbxmastree.service
 ```
 
-This syncs your checkout into `/opt/rgbxmastree` and restarts `rgbxmastree.service` (it does **not** run `apt` or reinstall Python deps).
+## Available Light Programs
 
-Re-run `sudo ./scripts/setup_pi.sh` when:
+The tree comes with these built-in patterns:
 
-- it’s a first-time install (no `/opt/rgbxmastree` yet)
-- `requirements.txt` changed and you need new Python dependencies
+- **Candles** - Flickering warm candlelight effect
+- **Snowfall** - Gentle falling snow
+- **Candy Cane** - Classic red and white stripes
+- **Holly Jolly** - Festive red and green patterns
+- **Silent Night** - Calm, peaceful blue tones
+- **Vintage Lights** - Old-school Christmas lights with a warm glow
+- **Fireplace** - Cozy fire effect
+- **Rainbow Snake** - Rainbow colors spiraling around the tree
+- **Matrix Rain** - Digital rain effect (for the nerds)
+- **Navi** - Blue fairy-like sparkles
+- **Police Lights** - Red and blue flashing (hey, not everything has to be Christmas)
+- **Radar Scan** - Rotating scan effect
+- Plus several legacy patterns from the original project
 
-## Low-level control (optional)
+Speed control lets you make them faster or slower, and you can adjust the brightness of the tree body and star separately.
 
-If you want to write your own programs, you can import the hardware driver:
+## Troubleshooting
+
+**Can't access the web interface?**
+- Make sure your phone/computer is on the same Wi-Fi network as the Pi
+- Double-check your Pi's IP address with `hostname -I`
+- Check if the service is running: `sudo systemctl status rgbxmastree.service`
+
+**Tree isn't lighting up?**
+- Make sure the tree is properly seated on the Pi's GPIO pins and the right way around
+- Try restarting the service: `sudo systemctl restart rgbxmastree.service`
+- Check that the Pi is powered properly (some trees draw a lot of current)
+
+---
+
+## For Developers and Tinkerers
+
+Everything below this point is for people who want to modify the code, write their own light patterns, or understand how the hardware works. If you just want to use the tree, you're already done.
+
+### Writing Your Own Light Programs
+
+Want to create custom light patterns? Check out the `rgbxmastree/programs/PROGRAM_GUIDE.md` file for a complete guide.
+
+Quick example:
 
 ```python
 from rgbxmastree.hardware.tree import RGBXmasTree
 from colorzero import Color
 
 tree = RGBXmasTree()
-tree.color = Color("red")
+tree.color = Color("red")  # Set entire tree to red
 ```
 
-### Pixel mapping (`level` / `branch` / `star`)
+All programs live in `rgbxmastree/programs/` and are automatically discovered by the web interface.
 
-The tree body is addressed as **3 levels × 8 branches**:
+### Hardware Details: Tree Structure
 
-- `level`: `0..2` (0 is the bottom level)
-- `branch`: `0..7` (around the tree)
-- `tree.star`: the star pixel
+The tree hardware has:
+- **3 levels** of branches (0=bottom, 1=middle, 2=top)
+- **8 branches** per level (arranged in a circle, 0-7)
+- **1 star** on top
 
-If you orient the tree so the Raspberry Pi is facing you, `branch=0` starts at the “front” and counts around.
-
-Example:
+### Accessing Individual Pixels
 
 ```python
 from rgbxmastree.hardware.tree import RGBXmasTree
 from colorzero import Color
 
 tree = RGBXmasTree()
-tree[0, 0].color = Color("green")  # bottom/front
+
+# Access by level and branch
+tree[0, 0].color = Color("green")  # Bottom level, first branch
+tree[1, 3].color = Color("red")    # Middle level, fourth branch
+
+# Access the star
 tree.star.color = Color("yellow")
+
+# Set all pixels at once
+tree.color = Color("white")
+
+# Iterate through all pixels
+for pixel in tree:
+    pixel.color = Color("blue")
 ```
 
-### Batching updates (`show()` / `auto_show`)
+If you position the tree so the Raspberry Pi faces you, branch 0 is at the "front" and counts clockwise around the tree.
 
-By default, writes show immediately (`auto_show=True`). For faster multi-pixel updates, batch changes and call `show()` once:
+### Batching Updates for Better Performance
+
+By default, each color change updates the LEDs immediately. For smoother animations that update many pixels at once, use batched mode:
 
 ```python
-tree.auto_show = False
+tree.auto_show = False  # Disable auto-update
+
+# Make multiple changes
 for level in range(3):
     for branch in range(8):
-        tree[level, branch].color = (0.0, 0.0, 1.0)
-tree.star.color = (1.0, 1.0, 1.0)
-tree.show()
+        tree[level, branch].color = (0.0, 0.0, 1.0)  # Blue
+tree.star.color = (1.0, 1.0, 1.0)  # White
+
+tree.show()  # Update all LEDs at once
+tree.auto_show = True  # Re-enable auto-update
 ```
 
-### Brightness (`body_brightness` / `star_brightness`)
+### Brightness Control
 
-Brightness is exposed as APA102 “global brightness” **ints** `0..31`:
+Brightness is controlled separately for the tree body and star. The hardware uses values 0-31:
 
 ```python
-tree.body_brightness = 8
-tree.star_brightness = 2
+tree.body_brightness = 8   # Dim body
+tree.star_brightness = 2   # Very dim star
 ```
 
-Built-in programs live in `rgbxmastree/programs/`.
+The web interface converts this to a percentage (0-100%) for user-friendliness.
+
+### Project Structure
+
+- `rgbxmastree/hardware/tree.py` - Low-level hardware driver
+- `rgbxmastree/programs/` - All light pattern implementations
+- `rgbxmastree/web/` - Flask web server and interface
+- `rgbxmastree/controller.py` - Program switching and state management
+- `rgbxmastree/scheduler.py` - Daily schedule and countdown timer logic
+- `scripts/` - Installation and update scripts
+
+---
+
+**Built by [James Hogg](https://jameshogg.tech) ([@hogg101](https://github.com/hogg101))** - Based on the original [3D RGB Xmas Tree examples](https://github.com/ThePiHut/rgbxmastree) from The Pi Hut.
