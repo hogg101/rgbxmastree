@@ -52,16 +52,19 @@ Clone this repository to your home directory:
 
 ```bash
 cd ~
-git clone https://github.com/hogg101/rgbxmastree.git
+git clone https://github.com/hogg101/rgbxmastree
 cd rgbxmastree
 ```
 
 ### Step 4: Run the setup script
 
 This script installs everything and sets up the tree to start automatically when your Pi boots:
-
-```bash
+First, make the script executable:
+'''bash
 chmod +x scripts/setup_pi.sh
+'''
+Then run the script:
+```bash
 sudo ./scripts/setup_pi.sh
 ```
 
@@ -69,7 +72,7 @@ The script will:
 - Install Python dependencies
 - Copy everything to `/opt/rgbxmastree`
 - Set up a system service that starts on boot
-- Start the tree controller
+- Start the tree controller and web interface
 
 ### Step 5: Open the web interface
 
@@ -79,7 +82,7 @@ On your phone or computer (connected to the same Wi-Fi), open your browser and g
 http://192.168.1.XXX:8080
 ```
 
-(Find your Pi's IP address by running `hostname -I` on the Pi)
+(Find your Pi's IP address by running `hostname -I` on the Pi or by using a network scanner or using your router's admin interface)
 
 ### Step 6: Enjoy!
 
@@ -237,3 +240,7 @@ The web interface converts this to a percentage (0-100%) for user-friendliness.
 ---
 
 **Built by [James Hogg](https://jameshogg.tech) ([@hogg101](https://github.com/hogg101))** - Based on the original [3D RGB Xmas Tree examples](https://github.com/ThePiHut/rgbxmastree) from The Pi Hut.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
