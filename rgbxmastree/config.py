@@ -25,17 +25,21 @@ def _fmt_hhmm(t: time) -> str:
 
 
 @dataclass
-class Schedule:
+class ScheduleBlock:
     start_hhmm: str = "07:30"
     end_hhmm: str = "23:00"
     # days: 0=Mon ... 6=Sun. None means every day.
     days: list[int] | None = None
+    enabled: bool = True
 
     def start_time(self) -> time:
         return _parse_hhmm(self.start_hhmm)
 
     def end_time(self) -> time:
         return _parse_hhmm(self.end_hhmm)
+
+
+MAX_SCHEDULE_BLOCKS = 5
 
 
 @dataclass
@@ -46,7 +50,7 @@ class AppConfig:
     # Brightness controls (0..100 percent). Mapped to APA102 0..31 bits by controller.
     body_brightness_pct: int = 50
     star_brightness_pct: int = 50
-    schedule: Schedule = field(default_factory=Schedule)
+    schedule_blocks: list[ScheduleBlock] = field(default_factory=lambda: [ScheduleBlock()])
     # ISO 8601 local time string (no timezone) or None
     countdown_until: str | None = None
 
@@ -71,18 +75,26 @@ def load_config(path: str) -> AppConfig:
     except FileNotFoundError:
         return AppConfig()
 
-    schedule_raw = raw.get("schedule") or {}
+    blocks_raw = raw.get("schedule_blocks") or []
+    schedule_blocks: list[ScheduleBlock] = []
+    for b in blocks_raw[:MAX_SCHEDULE_BLOCKS]:
+        if isinstance(b, dict):
+            schedule_blocks.append(ScheduleBlock(
+                start_hhmm=b.get("start_hhmm", "07:30"),
+                end_hhmm=b.get("end_hhmm", "23:00"),
+                days=b.get("days"),
+                enabled=b.get("enabled", True),
+            ))
+    if not schedule_blocks:
+        schedule_blocks = [ScheduleBlock()]
+
     cfg = AppConfig(
         mode=raw.get("mode", "auto"),
         program_id=raw.get("program_id", "rgb_cycle"),
         program_speed=float(raw.get("program_speed", 1.0)),
         body_brightness_pct=int(raw.get("body_brightness_pct", 50)),
         star_brightness_pct=int(raw.get("star_brightness_pct", 50)),
-        schedule=Schedule(
-            start_hhmm=schedule_raw.get("start_hhmm", "07:30"),
-            end_hhmm=schedule_raw.get("end_hhmm", "23:00"),
-            days=schedule_raw.get("days"),
-        ),
+        schedule_blocks=schedule_blocks,
         countdown_until=raw.get("countdown_until"),
     )
     return cfg
@@ -92,9 +104,10 @@ def save_config(path: str, cfg: AppConfig) -> None:
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     data = asdict(cfg)
 
-    # Ensure schedule format stays HH:MM even if we later store parsed values.
-    data["schedule"]["start_hhmm"] = _fmt_hhmm(_parse_hhmm(cfg.schedule.start_hhmm))
-    data["schedule"]["end_hhmm"] = _fmt_hhmm(_parse_hhmm(cfg.schedule.end_hhmm))
+    # Ensure schedule_blocks format stays HH:MM even if we later store parsed values.
+    for block in data.get("schedule_blocks", []):
+        block["start_hhmm"] = _fmt_hhmm(_parse_hhmm(block.get("start_hhmm", "07:30")))
+        block["end_hhmm"] = _fmt_hhmm(_parse_hhmm(block.get("end_hhmm", "23:00")))
 
     # Clamp brightness to sane bounds before persisting (defensive against manual edits).
     data["body_brightness_pct"] = max(0, min(100, int(data.get("body_brightness_pct", 50))))

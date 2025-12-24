@@ -65,17 +65,9 @@
       </section>
 
       <section class="card">
-        <div class="label">Daily schedule</div>
-        <div class="row row-2">
-          <label class="field">
-            <span>Start</span>
-            <input id="startTime" type="time" />
-          </label>
-          <label class="field">
-            <span>End</span>
-            <input id="endTime" type="time" />
-          </label>
-        </div>
+        <div class="label">Schedule Blocks</div>
+        <div id="scheduleBlocks" class="schedule-blocks"></div>
+        <button class="btn btn-soft" id="addBlock" type="button">+ Add Block</button>
         <button class="btn" id="saveSchedule" type="button">Save schedule</button>
         <div class="hint" id="scheduleHint"></div>
       </section>

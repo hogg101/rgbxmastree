@@ -24,6 +24,11 @@ function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
 let speedBounds = { min: 0.1, max: 200.0 };
 let speedReady = false;
 
+// Schedule blocks state (editable in UI before saving)
+let scheduleBlocks = [];
+const MAX_BLOCKS = 5;
+const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
+
 function speedPctToValue(pct, speedMin, speedMax) {
   // Exponential mapping: pct 0..100 -> speedMin..speedMax
   const p = clamp(Number(pct), 0, 100) / 100;
@@ -73,8 +78,127 @@ function setStatusLine(state) {
   const now = new Date(state.now);
   const modeLabel = state.mode === "manual_on" ? "On" : state.mode === "manual_off" ? "Off" : "Auto";
   const running = state.runtime?.program_running ? `Running: ${state.runtime.program_id ?? ""}` : "Stopped";
-  const inWindow = state.schedule?.in_window_now ? "in schedule" : "out of schedule";
+  const inWindow = state.in_window_now ? "in schedule" : "out of schedule";
   $("statusLine").textContent = `${modeLabel} • ${running} • ${inWindow} • ${now.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}`;
+}
+
+// Schedule blocks UI rendering
+function renderScheduleBlocks() {
+  const container = $("scheduleBlocks");
+  container.innerHTML = "";
+  
+  scheduleBlocks.forEach((block, idx) => {
+    const row = document.createElement("div");
+    row.className = "schedule-block";
+    
+    // Enable toggle
+    const enableBtn = document.createElement("button");
+    enableBtn.type = "button";
+    enableBtn.className = "btn btn-enable" + (block.enabled ? " active" : "");
+    enableBtn.textContent = block.enabled ? "On" : "Off";
+    enableBtn.addEventListener("click", () => {
+      block.enabled = !block.enabled;
+      renderScheduleBlocks();
+    });
+    
+    // Time inputs
+    const startInput = document.createElement("input");
+    startInput.type = "time";
+    startInput.className = "time-input";
+    startInput.value = block.start_hhmm;
+    startInput.addEventListener("change", (e) => {
+      block.start_hhmm = e.target.value;
+    });
+    
+    const endInput = document.createElement("input");
+    endInput.type = "time";
+    endInput.className = "time-input";
+    endInput.value = block.end_hhmm;
+    endInput.addEventListener("change", (e) => {
+      block.end_hhmm = e.target.value;
+    });
+    
+    // Days chips
+    const daysContainer = document.createElement("div");
+    daysContainer.className = "days-chips";
+    DAY_LABELS.forEach((label, dayIdx) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "day-chip";
+      const isActive = block.days === null || block.days.includes(dayIdx);
+      if (isActive) chip.classList.add("active");
+      chip.textContent = label;
+      chip.addEventListener("click", () => {
+        if (block.days === null) {
+          // Was "all days", now exclude this one
+          block.days = [0, 1, 2, 3, 4, 5, 6].filter(d => d !== dayIdx);
+        } else if (block.days.includes(dayIdx)) {
+          // Remove this day
+          block.days = block.days.filter(d => d !== dayIdx);
+          // If all days are selected again, use null
+          if (block.days.length === 0) {
+            block.days = [];
+          }
+        } else {
+          // Add this day
+          block.days = [...block.days, dayIdx].sort((a, b) => a - b);
+          // If all 7 days selected, use null
+          if (block.days.length === 7) {
+            block.days = null;
+          }
+        }
+        renderScheduleBlocks();
+      });
+      daysContainer.appendChild(chip);
+    });
+    
+    // Delete button
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "btn btn-delete";
+    deleteBtn.textContent = "×";
+    deleteBtn.disabled = scheduleBlocks.length <= 1;
+    deleteBtn.addEventListener("click", () => {
+      if (scheduleBlocks.length > 1) {
+        scheduleBlocks.splice(idx, 1);
+        renderScheduleBlocks();
+      }
+    });
+    
+    row.appendChild(enableBtn);
+    row.appendChild(startInput);
+    row.appendChild(endInput);
+    row.appendChild(daysContainer);
+    row.appendChild(deleteBtn);
+    
+    container.appendChild(row);
+  });
+  
+  // Update add button state
+  const addBtn = $("addBlock");
+  if (addBtn) {
+    addBtn.disabled = scheduleBlocks.length >= MAX_BLOCKS;
+  }
+}
+
+function addScheduleBlock() {
+  if (scheduleBlocks.length >= MAX_BLOCKS) return;
+  scheduleBlocks.push({
+    start_hhmm: "07:30",
+    end_hhmm: "23:00",
+    days: null,
+    enabled: true,
+  });
+  renderScheduleBlocks();
+}
+
+async function saveScheduleBlocks() {
+  try {
+    await apiPost("/api/schedule", { blocks: scheduleBlocks });
+    await refresh();
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 async function refresh() {
@@ -113,10 +237,18 @@ async function refresh() {
   if ($("starBrightnessRange")) $("starBrightnessRange").value = String(starPct);
   setBrightnessLabels(bodyPct, starPct);
 
-  // schedule
-  $("startTime").value = state.schedule?.start_hhmm ?? "07:30";
-  $("endTime").value = state.schedule?.end_hhmm ?? "23:00";
-  $("scheduleHint").textContent = state.schedule?.in_window_now ? "Currently within schedule window." : "Currently outside schedule window.";
+  // schedule blocks
+  scheduleBlocks = (state.schedule_blocks || []).map(b => ({
+    start_hhmm: b.start_hhmm || "07:30",
+    end_hhmm: b.end_hhmm || "23:00",
+    days: b.days,
+    enabled: b.enabled !== false,
+  }));
+  if (scheduleBlocks.length === 0) {
+    scheduleBlocks = [{ start_hhmm: "07:30", end_hhmm: "23:00", days: null, enabled: true }];
+  }
+  renderScheduleBlocks();
+  $("scheduleHint").textContent = state.in_window_now ? "Currently within schedule window." : "Currently outside schedule window.";
 
   // countdown
   $("countdownLine").textContent = fmtCountdown(state.countdown_until);
@@ -202,16 +334,11 @@ function wire() {
     await refresh();
   });
 
-  $("saveSchedule").addEventListener("click", async () => {
-    const start_hhmm = $("startTime").value;
-    const end_hhmm = $("endTime").value;
-    await apiPost("/api/schedule", { start_hhmm, end_hhmm, days: null });
-    await refresh();
-  });
+  // Schedule block controls
+  $("addBlock").addEventListener("click", addScheduleBlock);
+  $("saveSchedule").addEventListener("click", saveScheduleBlocks);
 }
 
 wire();
 refresh().catch(err => alert(err.message));
 setInterval(() => refresh().catch(() => {}), 5000);
-
-
