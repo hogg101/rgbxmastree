@@ -26,6 +26,7 @@ let speedReady = false;
 
 // Schedule blocks state (editable in UI before saving)
 let scheduleBlocks = [];
+let scheduleBlocksDirty = false;  // True if user has unsaved changes
 const MAX_BLOCKS = 5;
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -84,9 +85,6 @@ function setStatusLine(state) {
 
 // Schedule blocks UI rendering
 function renderScheduleBlocks() {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/ba4fc409-c603-43d0-8d2f-fc5417e52d0e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:renderScheduleBlocks',message:'Render called',data:{blocksCount:scheduleBlocks.length,blocks:JSON.parse(JSON.stringify(scheduleBlocks))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,C'})}).catch(()=>{});
-  // #endregion
   const container = $("scheduleBlocks");
   container.innerHTML = "";
   
@@ -101,6 +99,7 @@ function renderScheduleBlocks() {
     enableBtn.textContent = block.enabled ? "On" : "Off";
     enableBtn.addEventListener("click", () => {
       block.enabled = !block.enabled;
+      scheduleBlocksDirty = true;
       renderScheduleBlocks();
     });
     
@@ -111,6 +110,7 @@ function renderScheduleBlocks() {
     startInput.value = block.start_hhmm;
     startInput.addEventListener("change", (e) => {
       block.start_hhmm = e.target.value;
+      scheduleBlocksDirty = true;
     });
     
     const endInput = document.createElement("input");
@@ -119,6 +119,7 @@ function renderScheduleBlocks() {
     endInput.value = block.end_hhmm;
     endInput.addEventListener("change", (e) => {
       block.end_hhmm = e.target.value;
+      scheduleBlocksDirty = true;
     });
     
     // Days chips
@@ -132,9 +133,6 @@ function renderScheduleBlocks() {
       if (isActive) chip.classList.add("active");
       chip.textContent = label;
       chip.addEventListener("click", () => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/ba4fc409-c603-43d0-8d2f-fc5417e52d0e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:dayChip:before',message:'Day chip clicked',data:{dayIdx:dayIdx,blockIdx:idx,daysBefore:block.days},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         if (block.days === null) {
           // Was "all days", now exclude this one
           block.days = [0, 1, 2, 3, 4, 5, 6].filter(d => d !== dayIdx);
@@ -153,9 +151,7 @@ function renderScheduleBlocks() {
             block.days = null;
           }
         }
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/ba4fc409-c603-43d0-8d2f-fc5417e52d0e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:dayChip:after',message:'Day chip state after',data:{dayIdx:dayIdx,blockIdx:idx,daysAfter:block.days},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
+        scheduleBlocksDirty = true;
         renderScheduleBlocks();
       });
       daysContainer.appendChild(chip);
@@ -170,6 +166,7 @@ function renderScheduleBlocks() {
     deleteBtn.addEventListener("click", () => {
       if (scheduleBlocks.length > 1) {
         scheduleBlocks.splice(idx, 1);
+        scheduleBlocksDirty = true;
         renderScheduleBlocks();
       }
     });
@@ -188,6 +185,12 @@ function renderScheduleBlocks() {
   if (addBtn) {
     addBtn.disabled = scheduleBlocks.length >= MAX_BLOCKS;
   }
+  
+  // Show unsaved indicator
+  const hint = $("scheduleHint");
+  if (hint && scheduleBlocksDirty) {
+    hint.textContent = "Unsaved changes - click Save to apply.";
+  }
 }
 
 function addScheduleBlock() {
@@ -198,23 +201,16 @@ function addScheduleBlock() {
     days: null,
     enabled: true,
   });
+  scheduleBlocksDirty = true;
   renderScheduleBlocks();
 }
 
 async function saveScheduleBlocks() {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/ba4fc409-c603-43d0-8d2f-fc5417e52d0e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:saveScheduleBlocks:entry',message:'Save called',data:{blocks:JSON.parse(JSON.stringify(scheduleBlocks))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   try {
-    const result = await apiPost("/api/schedule", { blocks: scheduleBlocks });
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/ba4fc409-c603-43d0-8d2f-fc5417e52d0e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:saveScheduleBlocks:success',message:'Save succeeded',data:{result:result},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
+    await apiPost("/api/schedule", { blocks: scheduleBlocks });
+    scheduleBlocksDirty = false;  // Clear dirty flag after successful save
     await refresh();
   } catch (err) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/ba4fc409-c603-43d0-8d2f-fc5417e52d0e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:saveScheduleBlocks:error',message:'Save failed',data:{error:err.message},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     alert(err.message);
   }
 }
@@ -255,24 +251,22 @@ async function refresh() {
   if ($("starBrightnessRange")) $("starBrightnessRange").value = String(starPct);
   setBrightnessLabels(bodyPct, starPct);
 
-  // schedule blocks
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/ba4fc409-c603-43d0-8d2f-fc5417e52d0e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:refresh:scheduleBlocks',message:'Refresh updating scheduleBlocks',data:{fromServer:state.schedule_blocks,oldLocal:JSON.parse(JSON.stringify(scheduleBlocks))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,E'})}).catch(()=>{});
-  // #endregion
-  scheduleBlocks = (state.schedule_blocks || []).map(b => ({
-    start_hhmm: b.start_hhmm || "07:30",
-    end_hhmm: b.end_hhmm || "23:00",
-    days: b.days,
-    enabled: b.enabled !== false,
-  }));
-  if (scheduleBlocks.length === 0) {
-    scheduleBlocks = [{ start_hhmm: "07:30", end_hhmm: "23:00", days: null, enabled: true }];
+  // schedule blocks - only update from server if user hasn't made local changes
+  if (!scheduleBlocksDirty) {
+    scheduleBlocks = (state.schedule_blocks || []).map(b => ({
+      start_hhmm: b.start_hhmm || "07:30",
+      end_hhmm: b.end_hhmm || "23:00",
+      days: b.days,
+      enabled: b.enabled !== false,
+    }));
+    if (scheduleBlocks.length === 0) {
+      scheduleBlocks = [{ start_hhmm: "07:30", end_hhmm: "23:00", days: null, enabled: true }];
+    }
+    renderScheduleBlocks();
   }
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/ba4fc409-c603-43d0-8d2f-fc5417e52d0e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app.js:refresh:after',message:'After refresh assignment',data:{newLocal:JSON.parse(JSON.stringify(scheduleBlocks))},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,E'})}).catch(()=>{});
-  // #endregion
-  renderScheduleBlocks();
-  $("scheduleHint").textContent = state.in_window_now ? "Currently within schedule window." : "Currently outside schedule window.";
+  $("scheduleHint").textContent = state.in_window_now 
+    ? "Currently within schedule window." 
+    : "Currently outside schedule window.";
 
   // countdown
   $("countdownLine").textContent = fmtCountdown(state.countdown_until);
