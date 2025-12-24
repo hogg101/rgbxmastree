@@ -335,8 +335,9 @@ a:hover {
 }
 
 .day-chip.active {
-  background: #000;
+  background: var(--accent-green);
   color: #fff;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
 }
 
 .day-chip:hover {
@@ -351,5 +352,18 @@ a:hover {
 #addBlock:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Save button when there are unsaved changes */
+#saveSchedule.btn-dirty {
+  background: var(--accent-red);
+  color: #fff;
+  text-shadow: 1px 1px 0 #000;
+  animation: pulse-dirty 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dirty {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
 

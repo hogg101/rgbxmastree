@@ -191,6 +191,16 @@ function renderScheduleBlocks() {
   if (hint && scheduleBlocksDirty) {
     hint.textContent = "Unsaved changes - click Save to apply.";
   }
+  
+  // Toggle dirty state on save button
+  const saveBtn = $("saveSchedule");
+  if (saveBtn) {
+    if (scheduleBlocksDirty) {
+      saveBtn.classList.add("btn-dirty");
+    } else {
+      saveBtn.classList.remove("btn-dirty");
+    }
+  }
 }
 
 function addScheduleBlock() {
