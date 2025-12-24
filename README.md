@@ -60,9 +60,9 @@ cd rgbxmastree
 
 This script installs everything and sets up the tree to start automatically when your Pi boots:
 First, make the script executable:
-'''bash
+```bash
 chmod +x scripts/setup_pi.sh
-'''
+```
 Then run the script:
 ```bash
 sudo ./scripts/setup_pi.sh
@@ -76,7 +76,7 @@ The script will:
 
 ### Step 5: Open the web interface
 
-On your phone or computer (connected to the same Wi-Fi), open your browser and go to your Pi's IP address (or hostname):
+On your phone or computer (connected to the same Wi-Fi), open your browser and go to your Pi's IP address (or hostname), making sure to use the port 8080:
 
 ```
 http://192.168.1.XXX:8080
@@ -243,4 +243,9 @@ The web interface converts this to a percentage (0-100%) for user-friendliness.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)** license. 
+
+- **Commercial use is strictly prohibited.**
+- **Attribution is required** if you use this code as a basis for your own project.
+
+See the [LICENSE](LICENSE) file for the full text.
