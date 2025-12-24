@@ -106,8 +106,10 @@ def save_config(path: str, cfg: AppConfig) -> None:
 
     # #region agent log
     import json as json_module
-    with open('/Users/james/Github/rgbxmastree/.cursor/debug.log', 'a') as f:
-        f.write(json_module.dumps({"location":"config.py:save_config:before","message":"Before formatting","data":{"schedule_blocks":data.get("schedule_blocks")},"timestamp":__import__('time').time()*1000,"sessionId":"debug-session","hypothesisId":"E"})+'\n')
+    try:
+        with open('/tmp/rgbxmastree_debug.log', 'a') as f:
+            f.write(json_module.dumps({"location":"config.py:save_config:before","message":"Before formatting","data":{"schedule_blocks":data.get("schedule_blocks")},"timestamp":__import__('time').time()*1000,"sessionId":"debug-session","hypothesisId":"E"})+'\n')
+    except: pass
     # #endregion
 
     # Ensure schedule_blocks format stays HH:MM even if we later store parsed values.
