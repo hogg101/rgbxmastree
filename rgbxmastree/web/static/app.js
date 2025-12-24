@@ -186,12 +186,6 @@ function renderScheduleBlocks() {
     addBtn.disabled = scheduleBlocks.length >= MAX_BLOCKS;
   }
   
-  // Show unsaved indicator
-  const hint = $("scheduleHint");
-  if (hint && scheduleBlocksDirty) {
-    hint.textContent = "Unsaved changes - click Save to apply.";
-  }
-  
   // Toggle dirty state on save button
   const saveBtn = $("saveSchedule");
   if (saveBtn) {
