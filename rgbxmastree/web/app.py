@@ -126,6 +126,11 @@ def create_app(config_path: str) -> Flask:
     def api_schedule():
         data = request.get_json(force=True, silent=True) or {}
         blocks_raw = data.get("blocks")
+        # #region agent log
+        import json as json_module
+        with open('/Users/james/Github/rgbxmastree/.cursor/debug.log', 'a') as f:
+            f.write(json_module.dumps({"location":"app.py:api_schedule:entry","message":"API schedule called","data":{"blocks_raw":blocks_raw},"timestamp":__import__('time').time()*1000,"sessionId":"debug-session","hypothesisId":"B,E"})+'\n')
+        # #endregion
         if not isinstance(blocks_raw, list):
             return jsonify({"error": "blocks must be a list"}), 400
         if len(blocks_raw) > MAX_SCHEDULE_BLOCKS:
@@ -159,6 +164,11 @@ def create_app(config_path: str) -> Flask:
             c.schedule_blocks = schedule_blocks
 
         cfg = controller.update_config(_mut)
+        # #region agent log
+        import json as json_module
+        with open('/Users/james/Github/rgbxmastree/.cursor/debug.log', 'a') as f:
+            f.write(json_module.dumps({"location":"app.py:api_schedule:success","message":"Config updated","data":{"saved_blocks":[{"start_hhmm":b.start_hhmm,"end_hhmm":b.end_hhmm,"days":b.days,"enabled":b.enabled} for b in cfg.schedule_blocks]},"timestamp":__import__('time').time()*1000,"sessionId":"debug-session","hypothesisId":"E"})+'\n')
+        # #endregion
         return jsonify({
             "ok": True,
             "schedule_blocks": [
