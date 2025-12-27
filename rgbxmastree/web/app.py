@@ -4,7 +4,7 @@ from datetime import datetime
 
 from flask import Flask, jsonify, request, send_from_directory
 
-from rgbxmastree.config import Schedule
+from rgbxmastree.config import ScheduleBlock, MAX_SCHEDULE_BLOCKS
 from rgbxmastree.controller import TreeController
 from rgbxmastree.programs import PROGRAMS
 from rgbxmastree.scheduler import is_within_schedule
@@ -46,12 +46,16 @@ def create_app(config_path: str) -> Flask:
                     "body_pct": cfg.body_brightness_pct,
                     "star_pct": cfg.star_brightness_pct,
                 },
-                "schedule": {
-                    "start_hhmm": cfg.schedule.start_hhmm,
-                    "end_hhmm": cfg.schedule.end_hhmm,
-                    "days": cfg.schedule.days,
-                    "in_window_now": is_within_schedule(now, cfg.schedule),
-                },
+                "schedule_blocks": [
+                    {
+                        "start_hhmm": b.start_hhmm,
+                        "end_hhmm": b.end_hhmm,
+                        "days": b.days,
+                        "enabled": b.enabled,
+                    }
+                    for b in cfg.schedule_blocks
+                ],
+                "in_window_now": is_within_schedule(now, cfg.schedule_blocks),
                 "countdown_until": cfg.countdown_until,
                 "programs": [
                     {"id": p.id, "name": p.name, "default_speed": p.default_speed}
@@ -121,19 +125,52 @@ def create_app(config_path: str) -> Flask:
     @app.post("/api/schedule")
     def api_schedule():
         data = request.get_json(force=True, silent=True) or {}
-        start_hhmm = data.get("start_hhmm")
-        end_hhmm = data.get("end_hhmm")
-        days = data.get("days")
-        if not isinstance(start_hhmm, str) or not isinstance(end_hhmm, str):
-            return jsonify({"error": "start_hhmm/end_hhmm required"}), 400
-        if days is not None and not (isinstance(days, list) and all(isinstance(d, int) for d in days)):
-            return jsonify({"error": "days must be list[int] or null"}), 400
+        blocks_raw = data.get("blocks")
+        if not isinstance(blocks_raw, list):
+            return jsonify({"error": "blocks must be a list"}), 400
+        if len(blocks_raw) > MAX_SCHEDULE_BLOCKS:
+            return jsonify({"error": f"max {MAX_SCHEDULE_BLOCKS} blocks allowed"}), 400
+        if len(blocks_raw) == 0:
+            return jsonify({"error": "at least one block required"}), 400
+
+        # Validate each block
+        schedule_blocks: list[ScheduleBlock] = []
+        for i, b in enumerate(blocks_raw):
+            if not isinstance(b, dict):
+                return jsonify({"error": f"block {i} must be an object"}), 400
+            start_hhmm = b.get("start_hhmm")
+            end_hhmm = b.get("end_hhmm")
+            if not isinstance(start_hhmm, str) or not isinstance(end_hhmm, str):
+                return jsonify({"error": f"block {i}: start_hhmm/end_hhmm required"}), 400
+            days = b.get("days")
+            if days is not None and not (isinstance(days, list) and all(isinstance(d, int) for d in days)):
+                return jsonify({"error": f"block {i}: days must be list[int] or null"}), 400
+            enabled = b.get("enabled", True)
+            if not isinstance(enabled, bool):
+                return jsonify({"error": f"block {i}: enabled must be boolean"}), 400
+            schedule_blocks.append(ScheduleBlock(
+                start_hhmm=start_hhmm,
+                end_hhmm=end_hhmm,
+                days=days,
+                enabled=enabled,
+            ))
 
         def _mut(c):
-            c.schedule = Schedule(start_hhmm=start_hhmm, end_hhmm=end_hhmm, days=days)
+            c.schedule_blocks = schedule_blocks
 
         cfg = controller.update_config(_mut)
-        return jsonify({"ok": True, "schedule": {"start_hhmm": cfg.schedule.start_hhmm, "end_hhmm": cfg.schedule.end_hhmm, "days": cfg.schedule.days}})
+        return jsonify({
+            "ok": True,
+            "schedule_blocks": [
+                {
+                    "start_hhmm": b.start_hhmm,
+                    "end_hhmm": b.end_hhmm,
+                    "days": b.days,
+                    "enabled": b.enabled,
+                }
+                for b in cfg.schedule_blocks
+            ],
+        })
 
     @app.post("/api/brightness")
     def api_brightness():

@@ -255,3 +255,115 @@ a:hover {
   text-decoration: none;
 }
 
+/* Schedule Blocks */
+.schedule-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.schedule-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+  background: #f8f8f8;
+  border: 2px solid #000;
+}
+
+.schedule-block .time-input {
+  width: 90px;
+  padding: 6px;
+  font-size: 14px;
+  border: 2px solid #000;
+  font-family: inherit;
+  font-weight: bold;
+}
+
+.btn-enable {
+  min-width: 40px;
+  padding: 6px 8px;
+  font-size: 11px;
+  background: #ddd;
+}
+
+.btn-enable.active {
+  background: var(--accent-green);
+  color: #fff;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.btn-delete {
+  min-width: 32px;
+  padding: 6px 8px;
+  font-size: 16px;
+  font-weight: bold;
+  background: #fff;
+  color: var(--accent-red);
+  margin-left: auto;
+}
+
+.btn-delete:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Days chips */
+.days-chips {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.day-chip {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 10px;
+  font-weight: 900;
+  font-family: inherit;
+  border: 2px solid #000;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, color 0.1s;
+}
+
+.day-chip.active {
+  background: var(--accent-green);
+  color: #fff;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+
+.day-chip:hover {
+  background: var(--accent-gold);
+  color: #000;
+}
+
+#addBlock {
+  margin-bottom: 8px;
+}
+
+#addBlock:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Save button when there are unsaved changes */
+#saveSchedule.btn-dirty {
+  background: var(--accent-red);
+  color: #fff;
+  text-shadow: 1px 1px 0 #000;
+  animation: pulse-dirty 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dirty {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+

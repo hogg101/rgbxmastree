@@ -63,7 +63,7 @@ class TreeController:
             return False
 
         # auto mode:
-        in_window = is_within_schedule(now, cfg.schedule)
+        in_window = is_within_schedule(now, cfg.schedule_blocks)
         until = cfg.countdown_until_dt()
         countdown_on = bool(until and until > now)
         return in_window or countdown_on
