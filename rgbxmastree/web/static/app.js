@@ -26,9 +26,35 @@ let speedReady = false;
 
 // Schedule blocks state (editable in UI before saving)
 let scheduleBlocks = [];
-let scheduleBlocksDirty = false;  // True if user has unsaved changes
+let savedScheduleBlocks = [];  // Last saved state for comparison
 const MAX_BLOCKS = 5;
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
+
+// Deep compare two arrays of days (handles null = all days)
+function daysEqual(a, b) {
+  if (a === null && b === null) return true;
+  if (a === null || b === null) return false;
+  if (a.length !== b.length) return false;
+  return a.every((d, i) => d === b[i]);
+}
+
+// Deep compare two schedule block arrays
+function blocksEqual(current, saved) {
+  if (current.length !== saved.length) return false;
+  return current.every((block, i) => {
+    const s = saved[i];
+    return block.start_hhmm === s.start_hhmm &&
+           block.end_hhmm === s.end_hhmm &&
+           block.enabled === s.enabled &&
+           daysEqual(block.days, s.days);
+  });
+}
+
+// Check if current blocks differ from saved and update dirty state
+function updateDirtyState() {
+  const isDirty = !blocksEqual(scheduleBlocks, savedScheduleBlocks);
+  renderScheduleBlocks(isDirty);
+}
 
 function speedPctToValue(pct, speedMin, speedMax) {
   // Exponential mapping: pct 0..100 -> speedMin..speedMax
@@ -84,7 +110,7 @@ function setStatusLine(state) {
 }
 
 // Schedule blocks UI rendering
-function renderScheduleBlocks() {
+function renderScheduleBlocks(isDirty) {
   const container = $("scheduleBlocks");
   container.innerHTML = "";
   
@@ -99,8 +125,7 @@ function renderScheduleBlocks() {
     enableBtn.textContent = block.enabled ? "On" : "Off";
     enableBtn.addEventListener("click", () => {
       block.enabled = !block.enabled;
-      scheduleBlocksDirty = true;
-      renderScheduleBlocks();
+      updateDirtyState();
     });
     
     // Time inputs
@@ -110,7 +135,7 @@ function renderScheduleBlocks() {
     startInput.value = block.start_hhmm;
     startInput.addEventListener("change", (e) => {
       block.start_hhmm = e.target.value;
-      scheduleBlocksDirty = true;
+      updateDirtyState();
     });
     
     const endInput = document.createElement("input");
@@ -119,7 +144,7 @@ function renderScheduleBlocks() {
     endInput.value = block.end_hhmm;
     endInput.addEventListener("change", (e) => {
       block.end_hhmm = e.target.value;
-      scheduleBlocksDirty = true;
+      updateDirtyState();
     });
     
     // Days chips
@@ -151,8 +176,7 @@ function renderScheduleBlocks() {
             block.days = null;
           }
         }
-        scheduleBlocksDirty = true;
-        renderScheduleBlocks();
+        updateDirtyState();
       });
       daysContainer.appendChild(chip);
     });
@@ -166,8 +190,7 @@ function renderScheduleBlocks() {
     deleteBtn.addEventListener("click", () => {
       if (scheduleBlocks.length > 1) {
         scheduleBlocks.splice(idx, 1);
-        scheduleBlocksDirty = true;
-        renderScheduleBlocks();
+        updateDirtyState();
       }
     });
     
@@ -189,7 +212,7 @@ function renderScheduleBlocks() {
   // Toggle dirty state on save button
   const saveBtn = $("saveSchedule");
   if (saveBtn) {
-    if (scheduleBlocksDirty) {
+    if (isDirty) {
       saveBtn.classList.add("btn-dirty");
     } else {
       saveBtn.classList.remove("btn-dirty");
@@ -205,14 +228,15 @@ function addScheduleBlock() {
     days: null,
     enabled: true,
   });
-  scheduleBlocksDirty = true;
-  renderScheduleBlocks();
+  updateDirtyState();
 }
 
 async function saveScheduleBlocks() {
   try {
     await apiPost("/api/schedule", { blocks: scheduleBlocks });
-    scheduleBlocksDirty = false;  // Clear dirty flag after successful save
+    // Update saved state to match current after successful save
+    savedScheduleBlocks = JSON.parse(JSON.stringify(scheduleBlocks));
+    renderScheduleBlocks(false);  // Not dirty anymore
     await refresh();
   } catch (err) {
     alert(err.message);
@@ -256,17 +280,23 @@ async function refresh() {
   setBrightnessLabels(bodyPct, starPct);
 
   // schedule blocks - only update from server if user hasn't made local changes
-  if (!scheduleBlocksDirty) {
-    scheduleBlocks = (state.schedule_blocks || []).map(b => ({
-      start_hhmm: b.start_hhmm || "07:30",
-      end_hhmm: b.end_hhmm || "23:00",
-      days: b.days,
-      enabled: b.enabled !== false,
-    }));
-    if (scheduleBlocks.length === 0) {
-      scheduleBlocks = [{ start_hhmm: "07:30", end_hhmm: "23:00", days: null, enabled: true }];
-    }
-    renderScheduleBlocks();
+  const serverBlocks = (state.schedule_blocks || []).map(b => ({
+    start_hhmm: b.start_hhmm || "07:30",
+    end_hhmm: b.end_hhmm || "23:00",
+    days: b.days,
+    enabled: b.enabled !== false,
+  }));
+  const hasServerBlocks = serverBlocks.length > 0;
+  const defaultBlocks = [{ start_hhmm: "07:30", end_hhmm: "23:00", days: null, enabled: true }];
+  
+  // Check if user has unsaved local changes
+  const isDirty = !blocksEqual(scheduleBlocks, savedScheduleBlocks);
+  
+  if (!isDirty) {
+    // No unsaved changes - sync with server
+    scheduleBlocks = hasServerBlocks ? serverBlocks : defaultBlocks;
+    savedScheduleBlocks = JSON.parse(JSON.stringify(scheduleBlocks));
+    renderScheduleBlocks(false);
   }
   $("scheduleHint").textContent = state.in_window_now 
     ? "Currently within schedule window." 
