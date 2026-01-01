@@ -144,7 +144,7 @@ Speed control lets you make them faster or slower, and you can adjust the bright
 **Tree isn't lighting up?**
 - Make sure the tree is properly seated on the Pi's GPIO pins and the right way around
 - Try restarting the service: `sudo systemctl restart rgbxmastree.service`
-- Check that the Pi is powered properly (some trees draw a lot of current)
+- Check that the Pi is powered properly (official power supply recommended)
 
 ---
 
